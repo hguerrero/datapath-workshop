@@ -1,0 +1,21 @@
+{
+  "name": "expense-approval-agent",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Volcano-powered expense approval agent for Kong Data Path Workshop",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@volcano.dev/agent": "^1.2.0",
+    "dotenv": "^17.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.39",
+    "tsx": "^4.19.4",
+    "typescript": "^5.4.5"
+  }
+}
