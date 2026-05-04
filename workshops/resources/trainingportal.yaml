@@ -1,0 +1,47 @@
+apiVersion: training.educates.dev/v1beta1
+kind: TrainingPortal
+metadata:
+  name: portal
+spec:
+  portal:
+    ingress:
+      hostname: portal
+    password: agenticera
+    registration:
+      type: anonymous
+    sessions:
+      maximum: 50
+    updates:
+      workshop: true
+    workshop:
+      defaults:
+        reserved: 0
+  workshops:
+  - alias: "dp-lab1"
+    expires: 30m
+    initial: 0
+    name: lab-data-path-agent-loop
+    orphaned: 5m
+    overdue: 2m
+    reserved: 0
+  - alias: "dp-lab2"
+    expires: 30m
+    initial: 0
+    name: lab-auth-tool-access
+    orphaned: 5m
+    overdue: 2m
+    reserved: 0
+  - alias: "dp-lab3"
+    expires: 30m
+    initial: 0
+    name: lab-llm-governance
+    orphaned: 5m
+    overdue: 2m
+    reserved: 0
+  - alias: "dp-lab4"
+    expires: 30m
+    initial: 0
+    name: lab-kafka-events
+    orphaned: 5m
+    overdue: 2m
+    reserved: 0

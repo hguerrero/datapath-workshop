@@ -1,0 +1,111 @@
+apiVersion: training.educates.dev/v1beta1
+kind: Workshop
+metadata:
+  name: lab-data-path-agent-loop
+spec:
+  title: "Kong Data Path — Lab 1: The Agent Loop"
+  description: >
+    Wire a Volcano-powered expense approval agent to three mock APIs exposed
+    as MCP tools through Kong's AI MCP Proxy Plugin. Trace every hop of the
+    data path: client → Kong → agent → Kong → LLM, Kong → MCP tools.
+  vendor: konghq.com
+  authors:
+  - Kong Technical Product Marketing
+  difficulty: beginner    
+  url: https://github.com/Kong/kong-data-path-workshop
+  duration: 45m
+  publish:
+    image: docker.io/hguerreroo/lab-agent-loop-files:latest
+  workshop:
+    files:
+    - image:
+        url: docker.io/hguerreroo/lab-agent-loop-files:latest
+      includePaths:
+      - /workshop/**
+      - /excercises/**
+      - /README.md
+  session:
+    namespaces:
+      budget: small
+      security:
+        policy: baseline
+    applications:
+      terminal:
+        enabled: true
+      editor:
+        enabled: true
+      console:
+        enabled: false
+    env:
+      - name: PROXY
+        value: "$(session_namespace)-proxy.$(ingress_domain)"
+      - name: EXPENSE_MCP_URL
+        value: "https://$(PROXY)/mcp/expense"
+      - name: HR_MCP_URL
+        value: "https://$(PROXY)/mcp/hr"
+      - name: POLICY_MCP_URL
+        value: "https://$(PROXY)/mcp/policy"
+    ingresses:
+      - name: mcp-inspector
+        port: 6274
+        host: mcp-inspector-service
+        protocol: TCP
+    dashboards:
+      - name: MCP Inspector
+        url: "$(ingress_protocol)://mcp-inspector-$(session_namespace).$(ingress_domain)/"      
+  environment:
+    objects:
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: mcp-inspector
+        labels:
+          app: mcp-inspector
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: mcp-inspector
+        template:
+          metadata:
+            labels:
+              app: mcp-inspector
+          spec:
+            containers:
+            - name: mcp-inspector
+              image: ghcr.io/modelcontextprotocol/inspector:latest
+              env:
+              - name: HOST
+                value: "0.0.0.0"
+              - name: MCP_AUTO_OPEN_ENABLED
+                value: "false"
+              # It is highly recommended to set an auth token for security
+              - name: DANGEROUSLY_OMIT_AUTH
+                value: "true"
+              ports:
+              - containerPort: 6274
+                name: ui
+              - containerPort: 6277
+                name: proxy
+              resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "500m"
+    - apiVersion: v1
+      kind: Service
+      metadata:
+        name: mcp-inspector-service
+      spec:
+        selector:
+          app: mcp-inspector
+        type: ClusterIP
+        ports:
+        - port: 6274
+          targetPort: 6274
+          name: ui
+        - port: 6277
+          targetPort: 6277
+          name: proxy

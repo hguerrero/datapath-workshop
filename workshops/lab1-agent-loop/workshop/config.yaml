@@ -1,0 +1,12 @@
+title: "Kong Data Path — Lab 1: The Agent Loop"
+logo: static/images/kong-logo.png
+
+steps:
+  - 00-overview
+  - 01-prerequisites
+  - 02-start-mock-apis
+  - 03-expose-as-mcp
+  - 04-start-agent
+  - 05-first-decision
+  - 06-trace-the-path
+  - 07-summary

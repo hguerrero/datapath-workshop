@@ -1,0 +1,47 @@
+apiVersion: training.educates.dev/v1beta1
+kind: Workshop
+metadata:
+  name: lab-data-path-llm-governance
+spec:
+  title: "Kong Data Path — Lab 3: LLM Governance"
+  description: >
+    Route all agent LLM calls through Kong's AI Gateway. Apply rate limiting,
+    multi-provider failover, prompt guardrails, and semantic caching — none
+    of which require changing a line of agent code.
+  vendor: konghq.com
+  authors:
+  - Kong Technical Product Marketing
+  difficulty: intermediate
+  url: https://github.com/Kong/kong-data-path-workshop
+  duration: 60m
+  publish:
+    image: docker.io/hguerreroo/lab-llm-governance-files:latest
+  workshop:
+    files:
+    - image:
+        url: docker.io/hguerreroo/lab-llm-governance-files:latest
+      includePaths:
+      - /workshop/**
+      - /excercises/**
+      - /README.md
+  session:
+    namespaces:
+      budget: small
+      security:
+        policy: baseline
+    applications:
+      terminal:
+        enabled: true
+      editor:
+        enabled: true
+      console:
+        enabled: false
+    env:
+      - name: PROXY
+        value: "$(session_namespace)-proxy.$(ingress_domain)"
+      - name: LLM_PROXY
+        value: "https://$(session_namespace)-proxy.$(ingress_domain)/llm"
+      - name: AGENT_API_KEY
+        value: "$(agent_api_key)"
+      - name: KONNECT_TOKEN
+        value: "$(konnect_token)"

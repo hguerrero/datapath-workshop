@@ -1,0 +1,10 @@
+title: "Kong Data Path — Lab 4: Kafka Event Trail (Optional)"
+logo: static/images/kong-logo.png
+
+steps:
+  - 00-overview
+  - 01-kafka-setup
+  - 02-decision-events
+  - 03-consume-events
+  - 04-governance-patterns
+  - 05-summary

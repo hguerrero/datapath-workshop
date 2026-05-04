@@ -1,0 +1,12 @@
+title: "Kong Data Path — Lab 2: Auth & Tool Access Control"
+logo: static/images/kong-logo.png
+
+steps:
+  - 00-overview
+  - 01-the-problem
+  - 02-key-auth
+  - 03-consumers
+  - 04-acl-scoping
+  - 05-test-access
+  - 06-audit-logs
+  - 07-summary

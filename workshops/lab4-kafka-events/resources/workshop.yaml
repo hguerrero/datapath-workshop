@@ -1,0 +1,45 @@
+apiVersion: training.educates.dev/v1beta1
+kind: Workshop
+metadata:
+  name: lab-data-path-kafka
+spec:
+  title: "Kong Data Path — Lab 4: Kafka Event Trail (Optional)"
+  description: >
+    Attach Kong's Kafka Upstream plugin to the expense decision route.
+    Every agent decision becomes a Kafka event — immutable audit trail,
+    event-driven governance, and the foundation for downstream automation.
+  vendor: konghq.com
+  authors:
+  - Kong Technical Product Marketing
+  difficulty: intermediate
+  url: https://github.com/Kong/kong-data-path-workshop
+  duration: 45m
+  publish:
+    image: docker.io/hguerreroo/lab-kafka-events-files:latest
+  workshop:
+    files:
+    - image:
+        url: docker.io/hguerreroo/lab-kafka-events-files:latest
+      includePaths:
+      - /workshop/**
+      - /excercises/**
+      - /README.md
+  session:
+    namespaces:
+      budget: small
+      security:
+        policy: baseline
+    applications:
+      terminal:
+        enabled: true
+      editor:
+        enabled: true
+      console:
+        enabled: false
+    env:
+      - name: PROXY
+        value: "$(session_namespace)-proxy.$(ingress_domain)"
+      - name: AGENT_API_KEY
+        value: "$(agent_api_key)"
+      - name: KAFKA_BOOTSTRAP
+        value: "$(kafka_bootstrap)"

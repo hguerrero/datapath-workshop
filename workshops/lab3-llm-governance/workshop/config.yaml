@@ -1,0 +1,12 @@
+title: "Kong Data Path — Lab 3: LLM Governance"
+logo: static/images/kong-logo.png
+
+steps:
+  - 00-overview
+  - 01-ai-gateway-setup
+  - 02-rate-limiting
+  - 03-failover
+  - 04-guardrails
+  - 05-semantic-cache
+  - 06-observe
+  - 07-summary
