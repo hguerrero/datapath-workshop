@@ -8,54 +8,19 @@
  *   Kong proxy → /mcp/hr       → hr-service        (employee / department lookup)
  *   Kong proxy → /mcp/policy   → policy-service    (policy rules + evaluate)
  *
- * Every outbound call — to the LLM and to every MCP tool — passes through
- * Kong. That's the whole point: Kong is the single control plane for the
- * agent's entire data path.
- *
- * Refer to https://volcano.dev/docs for the full SDK reference.
- * The imports and constructor shape below follow the Volcano SDK conventions;
- * update the import path if the package name differs in your installed version.
+ * evaluateExpense() accepts an AgentRunConfig so both the CLI (index.ts) and
+ * the UI server (ui.ts) share the same logic without any env var requirement.
  */
 
 import { agent, llmOpenAI, mcp } from "@volcano.dev/agent";
-import { config } from "./config.js";
 
-// Build optional auth headers — empty in Lab 1, populated from Lab 2 onward
-function authHeaders(): Record<string, string> {
-  if (!config.agentApiKey) return {};
-  return { apikey: config.agentApiKey };
+export interface AgentRunConfig {
+  proxy: string;
+  openaiApiKey: string;
+  llmProxy?: string;    // defaults to https://api.openai.com
+  llmModel?: string;    // defaults to gpt-4o-mini
+  agentApiKey?: string; // leave empty for Lab 1
 }
-
-// LLM configuration — in Labs 1–2 this hits the provider directly;
-// in Lab 3 you change LLM_PROXY to point at the Kong AI Gateway route
-const llm = llmOpenAI({
-  baseURL: config.proxy,
-  apiKey: config.openaiApiKey,
-  model: config.llmModel,
-});
-
-/**
- * Declare the three MCP servers the agent can reach.
- * Each one points at a Kong route that fronts one of the mock APIs.
- * Kong's AI MCP Proxy Plugin (conversion-listener mode) translates the
- * REST OpenAPI spec into MCP tools automatically — no upstream changes needed.
- *
- * All three URLs resolve to $PROXY/mcp/* — every tool call passes through Kong.
- */
-// const tools = [
-//   mcp({
-//     url: config.tools.expenseMcpUrl,
-//     headers: authHeaders(),
-//   }),
-//   mcp({
-//     url: config.tools.hrMcpUrl,
-//     headers: authHeaders(),
-//   }),
-//   mcp({
-//     url: config.tools.policyMcpUrl,
-//     headers: authHeaders(),
-//   }),
-// ];
 
 const instructions = `
 You are an expense approval agent for a mid-sized technology company.
@@ -65,16 +30,6 @@ Your job is to evaluate expense submissions and reach one of three decisions:
   - REJECT:  the expense violates policy (prohibited category, missing receipt, etc.)
   - ESCALATE: the expense requires human manager sign-off (high value, restricted category, etc.)
 
-To make a good decision, follow this reasoning process:
-1. Call the policy service to retrieve current policy rules.
-2. Call the HR service to look up the submitting employee's spending limit and department.
-3. Call the policy service to evaluate the expense against policy.
-4. Based on the evaluation, call the appropriate expense service tool:
-     - approveExpense for approved decisions
-     - rejectExpense for rejections
-     - escalateExpense for escalations
-5. Return the decision and the record ID from the expense service.
-
 Always explain your reasoning briefly. Be concise — one sentence per step.
 `.trim();
 
@@ -83,15 +38,60 @@ Always explain your reasoning briefly. Be concise — one sentence per step.
  *
  * @param expenseInput  Plain-language description of the expense, e.g.:
  *   "Alice (emp-001) is submitting $150 for a team lunch."
+ * @param cfg  Runtime configuration — proxy URL, API keys, model selection.
  */
-export async function evaluateExpense(expenseInput: string): Promise<string> {
+export async function evaluateExpense(
+  expenseInput: string,
+  cfg: AgentRunConfig
+): Promise<string> {
+  // LLM configuration — in Labs 1–2 this hits the provider directly;
+  // in Lab 3 change llmProxy to $PROXY/llm to route through Kong AI Gateway.
+  const llm = llmOpenAI({
+    baseURL: cfg.llmProxy ?? "https://api.openai.com",
+    apiKey: cfg.openaiApiKey,
+    model: cfg.llmModel ?? "gpt-4o-mini",
+  });
+
+  // Three MCP servers — every tool call passes through Kong.
+  // In Lab 2+ an agentApiKey is added as a Bearer token so Kong's
+  // Key Auth plugin can authenticate the agent.
+  const mcpOptions = cfg.agentApiKey
+    ? { auth: { type: "bearer" as const, token: cfg.agentApiKey } }
+    : {};
+
+  const tools = [
+    // mcp(`${cfg.proxy}/mcp/expense`, mcpOptions),
+    // mcp(`${cfg.proxy}/mcp/hr`,      mcpOptions),
+    mcp(`${cfg.proxy}/mcp/policy`,  mcpOptions),
+  ];
+
   const expenseApprover = agent({
     llm,
-    // tools,
     name: "expenser",
     description: "Expense Approval Agent",
-    instructions,
+    instructions
   });
-  const result = await expenseApprover.then({ prompt: expenseInput }).run();
-  return result[0].llmOutput || "";
+
+  const result = await expenseApprover
+    .then({ 
+      prompt: "Retrieve the policy and summarize it", 
+      mcps: tools 
+    })
+    .then({ 
+      prompt: `Process the following expense: ${expenseInput}. Return the decision.`
+    })
+    .run();
+
+  console.log(result)
+
+  // The agent runs multiple steps (LLM → tool calls → LLM → …). The final
+  // answer is in the last step that carries a non-empty llmOutput.
+  const finalOutput = [...result]
+    .reverse()
+    .find((s) => s.llmOutput?.trim())
+    ?.llmOutput ?? "";
+
+  console.log(`[agent] steps: ${result.length}, output length: ${finalOutput.length}`);
+
+  return finalOutput;
 }

@@ -1,8 +1,6 @@
 /**
- * Agent entrypoint.
- *
- * Reads an expense from the command line (or uses a hardcoded demo) and
- * prints the agent's decision to stdout.
+ * CLI entry point — reads config from environment variables and evaluates
+ * a single expense passed on the command line (or a default example).
  *
  * Usage:
  *   npm run dev
@@ -11,28 +9,38 @@
  */
 
 import "dotenv/config";
-import { evaluateExpense } from "./agent.js";
+import { evaluateExpense, type AgentRunConfig } from "./agent.js";
+
+function required(name: string): string {
+  const val = process.env[name];
+  if (!val) throw new Error(`Missing env var: ${name}. Copy .env.example → .env`);
+  return val;
+}
+
+const cfg: AgentRunConfig = {
+  proxy:        required("PROXY"),
+  openaiApiKey: required("OPENAI_API_KEY"),
+  llmProxy:     process.env.LLM_PROXY,
+  llmModel:     process.env.LLM_MODEL,
+  agentApiKey:  process.env.AGENT_API_KEY,
+};
 
 const DEFAULT_EXPENSE =
   'Alice (emp-001) is submitting an expense of $150 for "Team lunch".';
 
-async function main() {
-  const expenseInput = process.argv.slice(2).join(" ") || DEFAULT_EXPENSE;
+const expenseInput = process.argv.slice(2).join(" ") || DEFAULT_EXPENSE;
 
-  console.log("─".repeat(60));
-  console.log("Expense input:");
-  console.log(expenseInput);
-  console.log("─".repeat(60));
-  console.log();
+console.log("─".repeat(60));
+console.log("Expense input:");
+console.log(expenseInput);
+console.log("─".repeat(60));
+console.log();
 
-  try {
-    const result = await evaluateExpense(expenseInput);
-    console.log("Agent decision:");
-    console.log(result);
-  } catch (err) {
-    console.error("Agent error:", err);
-    process.exit(1);
-  }
+try {
+  const result = await evaluateExpense(expenseInput, cfg);
+  console.log("Agent decision:");
+  console.log(result);
+} catch (err) {
+  console.error("Agent error:", err);
+  process.exit(1);
 }
-
-main();

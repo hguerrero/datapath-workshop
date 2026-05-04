@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense Approval Agent · Kong</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── Sidebar ─────────────────────────────────────────────────── -->
+    <aside id="sidebar">
+      <header class="sidebar-header">
+        <div class="logo">
+          <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 4L36 13V27L20 36L4 27V13L20 4Z" fill="#CCFF00"/>
+            <path d="M14 14L20 20M20 20L26 14M20 20L26 26M20 20L14 26" stroke="#000F06" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <span class="logo-text">Kong</span>
+        </div>
+        <h1 class="app-title">Expense Agent</h1>
+      </header>
+
+      <form id="config-form" autocomplete="off">
+        <section class="section">
+          <h2 class="section-title">Gateway</h2>
+
+          <label class="field">
+            <span class="label">Proxy URL</span>
+            <input
+              id="proxy"
+              type="url"
+              placeholder="https://…"
+              spellcheck="false"
+              required
+            />
+          </label>
+
+          <label class="field">
+            <span class="label">Agent API Key <em>(Lab 2+)</em></span>
+            <input id="agentApiKey" type="password" placeholder="leave empty for Lab 1" />
+          </label>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">LLM</h2>
+
+          <label class="field">
+            <span class="label">OpenAI API Key</span>
+            <input id="openaiApiKey" type="password" placeholder="sk-…" required />
+          </label>
+
+          <label class="field">
+            <span class="label">LLM Proxy <em>(Lab 3: route via Kong)</em></span>
+            <input
+              id="llmProxy"
+              type="url"
+              placeholder="https://api.openai.com"
+              spellcheck="false"
+            />
+          </label>
+
+          <label class="field">
+            <span class="label">Model</span>
+            <input id="llmModel" type="text" placeholder="gpt-4o-mini" />
+          </label>
+        </section>
+
+        <div class="sidebar-footer">
+          <button type="button" id="btn-save" class="btn btn-secondary btn-full">
+            Save Config
+          </button>
+          <button type="button" id="btn-clear" class="btn btn-ghost btn-full">
+            Clear Saved
+          </button>
+        </div>
+      </form>
+    </aside>
+
+    <!-- ── Main panel ─────────────────────────────────────────────── -->
+    <main id="main">
+      <div class="run-panel">
+
+        <div class="field">
+          <span class="label">Expense request</span>
+          <textarea
+            id="expenseInput"
+            rows="4"
+            placeholder='e.g. "Alice (emp-001) is submitting $150 for a team lunch."'
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <!-- Example scenarios -->
+        <div class="examples">
+          <span class="label">Examples</span>
+          <div class="example-chips">
+            <button type="button" class="chip" data-example="Alice (emp-001) is submitting $150 for a team lunch.">
+              🍱 Team lunch · $150
+            </button>
+            <button type="button" class="chip" data-example="Bob (emp-002) is submitting $2,500 for a conference trip including flights and hotel.">
+              ✈️ Conference trip · $2,500
+            </button>
+            <button type="button" class="chip" data-example="Carol (emp-003) is submitting $89 for office supplies — pens, notebooks, and sticky notes.">
+              📎 Office supplies · $89
+            </button>
+            <button type="button" class="chip" data-example="Dave (emp-004) is submitting $12,000 for a new laptop and external monitors with no receipt attached.">
+              💻 Hardware · $12,000 (no receipt)
+            </button>
+            <button type="button" class="chip" data-example="Eve (emp-005) is submitting $340 for a client dinner at a steakhouse, including alcohol.">
+              🍷 Client dinner · $340
+            </button>
+          </div>
+        </div>
+
+        <button type="button" id="btn-run" class="btn btn-primary btn-full">
+          ▶ Run Agent
+        </button>
+
+        <!-- Status badge -->
+        <div id="status-bar" class="status-bar hidden">
+          <span id="status-dot" class="status-dot"></span>
+          <span id="status-text"></span>
+        </div>
+
+        <!-- Result -->
+        <div id="result-box" class="result-box hidden">
+          <div class="result-header">
+            <span id="decision-badge" class="decision-badge"></span>
+            <span class="result-label">Agent response</span>
+          </div>
+          <pre id="result-text"></pre>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
