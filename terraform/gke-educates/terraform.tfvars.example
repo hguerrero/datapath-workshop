@@ -1,0 +1,9 @@
+# Educates GKE cluster provisioning.
+# This module is carried over from the Kong MCP Workshop without changes.
+# See terraform/gke-educates/README.md for the full variable reference.
+
+project_id   = "your-gcp-project"
+region       = "us-central1"
+cluster_name = "kong-data-path-workshop"
+node_count   = 3
+machine_type = "e2-standard-4"

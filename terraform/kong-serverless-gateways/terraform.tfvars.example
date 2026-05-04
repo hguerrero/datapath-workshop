@@ -1,0 +1,31 @@
+# Copy this file to terraform.tfvars and fill in the values before running
+# terraform init / plan / apply.
+#
+# DO NOT commit terraform.tfvars to source control — it contains secrets.
+
+# ── Konnect account ───────────────────────────────────────────────────────────
+# (also set in provider.tf / environment; these drive the workshop resources)
+
+system_account_id = "..."   # Konnect system account ID — from Konnect UI → System Accounts
+
+# ── Student cohort ────────────────────────────────────────────────────────────
+
+student_count        = 20
+student_start_number = 1       # Change to 21 to add a second batch without re-provisioning the first
+student_name_prefix  = "student-"
+
+control_plane_description = "Kong Data Path Workshop — environment for"
+control_plane_labels = {
+  workshop = "data-path"
+  cohort   = "2026-Q1"
+}
+
+# ── LLM API keys (stored in Konnect Vault — students never see these) ─────────
+
+llm_api_key_openai    = "sk-..."
+llm_api_key_anthropic = "sk-ant-..."    # Leave empty ("") to skip Lab 3 failover provisioning
+
+# ── Kafka (Lab 4 only) ────────────────────────────────────────────────────────
+
+kafka_bootstrap_servers = ""   # e.g. "b-1.mycluster.kafka.us-east-1.amazonaws.com:9092"
+                               # Leave empty to skip
