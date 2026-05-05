@@ -1,86 +1,56 @@
 ---
-title: Start the Agent
+title: Open the Agent Dashboard
 ---
 
-## Step 3 — Start the Volcano Agent
+## Step 3 — Open the Agent Dashboard
 
-Open `agent/src/agent.ts` and read through it. Notice three things:
+The Expense Agent is already running as a containerised app inside your
+Educates session. Click the **Expense Agent** tab at the top of this window
+to open the UI.
 
-1. **`tools` array** — three `mcp()` entries, each pointing at a `$PROXY/mcp/*`
-   URL. The agent has no knowledge of the upstream REST APIs or how the Mocking
-   plugin works; it only sees MCP tools discovered at those URLs.
+### Configure the agent
 
-2. **`llm.baseURL`** — reads `LLM_PROXY` from your `.env`. In Labs 1–2 this
-   goes directly to OpenAI. In Lab 3 you change this one variable to route all
-   LLM traffic through the Kong AI Gateway.
+The sidebar has two sections: **Gateway** and **LLM**.
 
-3. **`instructions`** — the system prompt tells the agent its four-step
-   reasoning process: retrieve policy → look up employee → evaluate → act.
-   The agent calls MCP tools to gather context before making a decision.
+**Gateway section:**
 
-### Set up your environment
+| Field | Value |
+|-------|-------|
+| Proxy URL | Paste the value of `$PROXY` from your terminal (run `echo $PROXY` to see it) |
+| Agent API Key | Leave empty for Lab 1 — this field is used in Lab 2 |
 
-Copy the example env file and fill in your values:
+**LLM section:**
 
-```terminal:execute
-command: cp agent/.env.example agent/.env
-```
+| Field | Value |
+|-------|-------|
+| OpenAI API Key | Your personal OpenAI key (`sk-…`) |
+| LLM Proxy | Leave empty — the agent calls OpenAI directly in Labs 1–2 |
+| Model | Leave empty to use the default (`gpt-4o-mini`) |
 
-Open `agent/.env` and set at minimum:
+Once filled in, click **Save Config**. The values are stored in browser
+`localStorage` so you will not need to re-enter them if you reload the page.
 
-```
-PROXY=<your Kong gateway URL>       # provided by your instructor
-OPENAI_API_KEY=<your key>
-LLM_PROXY=https://api.openai.com    # direct to OpenAI in Lab 1
-```
+### What the agent does with this config
 
-### Install dependencies
+Open `agent/src/agent.ts` in the editor tab and read through it:
 
 ```terminal:execute
-command: cd agent && npm install
+command: cat agent/src/agent.ts
 ```
 
-### Run the agent with the default expense
+Notice three things:
 
-```terminal:execute
-command: cd agent && npm run dev
-```
+1. **`tools` array** — three `mcp()` entries, each pointing at `$PROXY/mcp/*`.
+   The agent has no knowledge of the upstream REST APIs or the Mocking plugin;
+   it only sees the tools discovered at those URLs.
 
-You should see the agent print its reasoning steps and a final decision.
-The full trace will look something like:
+2. **`llm.baseURL`** — the LLM Proxy field from the sidebar. In Labs 1–2 this
+   goes directly to OpenAI. In Lab 3 you will change this single value to route
+   all LLM traffic through the Kong AI Gateway.
 
-```
-────────────────────────────────────────────────────────────
-Expense input:
-Alice (emp-001) is submitting an expense of $150 for "Team lunch".
-────────────────────────────────────────────────────────────
-
-[tool call] policy → getPolicy
-[tool call] hr     → getEmployee(emp-001)
-[tool call] policy → evaluateExpense(amount=150, employeeId=emp-001, category=meals)
-[tool call] expense → approveExpense(amount=150, description="Team lunch", employeeId="emp-001")
-
-Agent decision:
-The expense of $150 for "Team lunch" is approved. Alice's spending limit is $200
-and the policy auto-approve limit is $200. Reference: EXP-A3F7C1B2.
-```
-
-> **What you're seeing:** Every `[tool call]` line is a real HTTP request
-> from the agent through Kong to the mock route. Kong's AI MCP Proxy plugin
-> converts it to an HTTP call, and the Mocking plugin returns the spec example.
-> No external service is involved — the entire loop runs inside Kong.
-
-### Try a different expense
-
-Pass an expense directly on the command line:
-
-```terminal:execute
-command: cd agent && npm run dev -- "Bob (emp-002) is submitting \$2500 for cloud conference sponsorship."
-```
-
-Because the amount exceeds the escalation threshold (1000) in the policy spec
-example, the agent should call `escalateExpense` instead of `approveExpense`.
+3. **`instructions`** — the system prompt that describes the agent's reasoning
+   process: retrieve policy → look up employee → evaluate → act.
 
 ---
 
-→ Continue to **Your First Decision**
+→ Continue to **Your First Decisions**

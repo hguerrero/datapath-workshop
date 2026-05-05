@@ -1,59 +1,56 @@
 ---
-title: Your First Decision
+title: Your First Decisions
 ---
 
 ## Step 4 — Try All Three Outcomes
 
-The policy service defines three decision paths. Try each one.
+Switch to the **Expense Agent** dashboard tab. The policy you read earlier
+defines three decision paths. Use the example chips below the input field
+to try each one — or type your own description.
 
-### Approve
+### Approve — within policy
 
-Within Alice's spending limit, compliant category:
+Click the **🍱 Team lunch · $150** chip and press **▶ Run Agent**.
 
-```bash
-npm run dev -- "Alice (emp-001) wants to expense \$150 for a team lunch"
+Alice's spending limit is $200. The auto-approve limit is $200. Category
+`meals` is not restricted. Expected outcome: **APPROVED**.
+
+### Reject — prohibited category
+
+Type this in the expense input and run the agent:
+
+```
+Bob (emp-002) is submitting $80 for alcohol at a client dinner.
 ```
 
-Expected outcome: **approved**
-
-### Reject
-
-Prohibited category:
-
-```bash
-npm run dev -- "Bob (emp-002) is submitting \$80 for alcohol at a client dinner"
-```
-
-Expected outcome: **rejected** — the policy service flags `alcohol` as a
-prohibited category regardless of amount.
+The policy spec example marks `alcohol` as a prohibited category regardless
+of amount. Expected outcome: **REJECTED**.
 
 ### Escalate — high value
 
-Above the escalation threshold ($1000):
+Click the **✈️ Conference trip · $2,500** chip and run the agent.
 
-```bash
-npm run dev -- "Bob (emp-002) is submitting \$2500 for a conference in Austin"
-```
-
-Expected outcome: **escalated** — two rules fire: the amount exceeds
-$1000 and `conference` is an always-escalate category.
+The amount ($2,500) exceeds the escalation threshold ($1,000). Expected
+outcome: **ESCALATED**.
 
 ### Escalate — restricted category
 
-```bash
-npm run dev -- "Alice (emp-001) is expensing \$400 for new headphones (equipment)"
+Type this and run:
+
+```
+Alice (emp-001) is expensing $400 for new headphones (equipment).
 ```
 
-Expected outcome: **escalated** — `equipment` is in the always-escalate
-category list even though Alice's spending limit is $200.
+`equipment` is in the always-escalate category list even though the amount
+is within Alice's spending limit. Expected outcome: **ESCALATED**.
 
 ---
 
 ### Observation
 
-The agent reached four different decisions based purely on context it gathered
-via MCP tool calls. No decision logic lives in the agent code — it all comes
-from the policy service and the LLM's interpretation of what it found.
+The agent reached different decisions based purely on context it gathered
+via MCP tool calls. No decision logic lives in the agent code — it all
+comes from the policy service and the LLM's interpretation of what it found.
 
 **This is the key insight for governance:** if you want to change how
 decisions are made, you change the policy service or the LLM behaviour —

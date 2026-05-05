@@ -1,75 +1,14 @@
 ---
-title: Expose APIs as MCP Tools
+title: Verify the MCP Tools
 ---
 
-## Step 2 — Expose the REST APIs as MCP Tools via Kong
+## Step 2 — Verify the MCP Tools
 
-This step uses two Kong plugins working together on every tool route:
+The Terraform provisioning already applied the Kong configuration. Before
+running the agent, confirm that all three MCP routes are serving the correct
+tools.
 
-| Plugin | What it does |
-|--------|-------------|
-| **AI MCP Proxy** (`conversion-listener`) | Reads your OpenAPI spec and generates an MCP server from it. Translates inbound MCP tool calls into HTTP requests and outbound HTTP responses back into MCP responses. |
-| **Mocking** | Intercepts each HTTP request *before* it reaches the upstream and returns the `example` payload from the spec. The upstream (`http://mock-*.internal`) is never contacted. |
-
-Because the Mocking plugin short-circuits every call, there are **no upstream
-services to start**. Kong handles the full round-trip.
-
-### Sync the Lab 1 decK config
-
-The pre-built config in `decK/lab1-agent-loop/kong.yaml` creates all three
-services, routes, and plugins in one shot. Make sure you have set
-`SPEC_BASE_URL`, `KONNECT_TOKEN`, and `CP_NAME`, then run:
-
-```terminal:execute
-command: deck gateway sync decK/lab1-agent-loop/kong.yaml \
-  --konnect-token $KONNECT_TOKEN \
-  --konnect-control-plane-name $CP_NAME \
-  --env-var SPEC_BASE_URL=$SPEC_BASE_URL
-```
-
-decK will print a diff of what it is creating. You should see three services
-(`expense-service`, `hr-service`, `policy-service`) and six plugins (two per
-route).
-
-### What the config does
-
-Open `decK/lab1-agent-loop/kong.yaml` and find the `expense-mcp` route:
-
-```terminal:execute
-command: cat decK/lab1-agent-loop/kong.yaml
-```
-
-Notice the plugin chain on that route:
-
-```yaml
-plugins:
-  - name: ai-mcp-proxy
-    config:
-      mode: conversion-listener
-      upstream_path: /
-      spec:
-        url: $SPEC_BASE_URL/expense-service/openapi.yaml
-
-  - name: mocking
-    config:
-      api_specification_filename: expense-service/openapi.yaml
-      random_delay: false
-      max_delay_time: 1
-      min_delay_time: 0
-      include_base_url: false
-```
-
-Kong runs plugins in declaration order:
-1. `ai-mcp-proxy` converts the MCP `tools/call` JSON into a REST request.
-2. `mocking` intercepts that REST request and returns the spec example.
-3. `ai-mcp-proxy` converts the REST response back into an MCP result.
-
-The upstream URL (`http://mock-expense.internal`) is a placeholder that is
-never resolved.
-
-### Verify the MCP endpoints
-
-Once the sync completes, confirm each route exposes the correct tools:
+### List tools on each route
 
 ```terminal:execute
 command: curl -s -X POST $PROXY/mcp/expense \
@@ -77,7 +16,7 @@ command: curl -s -X POST $PROXY/mcp/expense \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}' | jq '.result.tools[].name'
 ```
 
-Expected output:
+Expected:
 ```
 "approveExpense"
 "rejectExpense"
@@ -90,15 +29,30 @@ command: curl -s -X POST $PROXY/mcp/hr \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}' | jq '.result.tools[].name'
 ```
 
+Expected:
+```
+"getEmployee"
+```
+
 ```terminal:execute
 command: curl -s -X POST $PROXY/mcp/policy \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}' | jq '.result.tools[].name'
 ```
 
+Expected:
+```
+"getPolicy"
+"evaluateExpense"
+```
+
+> If any of these return a 404 or an empty tools list, let your instructor
+> know — the Terraform apply may not have completed yet.
+
 ### Call a tool manually
 
-Try calling the `getPolicy` tool directly to see what the Mocking plugin returns:
+Try calling `getPolicy` directly to see the raw payload the Mocking plugin
+returns. This is exactly what the agent will receive on its first tool call:
 
 ```terminal:execute
 command: curl -s -X POST $PROXY/mcp/policy \
@@ -114,9 +68,16 @@ command: curl -s -X POST $PROXY/mcp/policy \
   }' | jq '.result.content[0].text | fromjson'
 ```
 
-You should see the policy rules from the spec example (auto-approve limit,
-escalation threshold, restricted categories, etc.).
+Read through the output. Note the `autoApproveLimit`, `escalationThreshold`,
+and `restrictedCategories` values — these are the rules the agent will use
+when it evaluates expenses in the next step.
+
+### Explore with MCP Inspector
+
+Open the **MCP Inspector** dashboard tab and connect it to `$PROXY/mcp/policy`.
+You can browse all available tools and call them interactively — a useful
+debugging tool in later labs when you add authentication.
 
 ---
 
-→ Continue to **Start the Agent**
+→ Continue to **Open the Agent Dashboard**

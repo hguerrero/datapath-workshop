@@ -1,54 +1,58 @@
 ---
-title: Prerequisites
+title: Your Environment
 ---
 
-## Before You Start
+## Step 0 — Verify Your Environment
 
-### What you need
+Everything you need is already running. This step confirms the key pieces
+are healthy before you go further.
 
-- **Konnect account** — your instructor has provisioned a Serverless Gateway for you.
-  The gateway URL is available in this terminal as `$PROXY`.
-- **Node.js 20+** — verify with `node --version`
-- **npm** — verify with `npm --version`
-- **curl**
-- **An OpenAI API key** — you will set this in a `.env` file in the next step.
+### Check your session variables
 
-Check your gateway is reachable:
-
-```bash
-curl -s $PROXY/
-```
-
-You should see a Kong 404 — no routes configured yet. That's expected.
-
-### Clone the workshop repo
+Your Terraform-provisioned gateway URL is injected automatically:
 
 ```terminal:execute
-command: git clone https://github.com/Kong/kong-data-path-workshop.git && cd kong-data-path-workshop
+command: echo "Gateway : $PROXY" && echo "Agent UI : $AGENT_URL"
 ```
 
-### Install agent dependencies
+You should see two HTTPS URLs. Keep `$PROXY` handy — you will paste it into
+the Agent UI in the next step.
+
+### Confirm the gateway is reachable
 
 ```terminal:execute
-command: cd agent && npm install
+command: curl -s -o /dev/null -w "%{http_code}" $PROXY/ && echo ""
 ```
 
-### Set up the environment file
+A `404` is expected — it means Kong is up but has no catch-all route.
+Any other response (connection refused, timeout) means the gateway is not
+yet ready; wait 30 seconds and retry.
+
+### Confirm the MCP routes exist
 
 ```terminal:execute
-command: cp .env.example .env
+command: curl -s -X POST $PROXY/mcp/policy \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}' \
+  | jq '.result.tools[].name'
 ```
 
-Open `.env` and fill in your values. The `PROXY` variable is already set in
-your session — you can confirm it with:
+Expected output:
 
-```terminal:execute
-command: echo $PROXY
+```
+"getPolicy"
+"evaluateExpense"
 ```
 
-Paste it into `.env` as the value for `PROXY`. Add your OpenAI API key for
-`OPENAI_API_KEY`. Leave `AGENT_API_KEY` empty for now (that's Lab 2).
+If you see this, all three MCP routes are up and serving tools.
+If you get a 404 or connection error, let your instructor know — the
+Terraform provisioning may still be completing.
+
+### What you need to bring
+
+The only thing **not** pre-provisioned is your **OpenAI API key**.
+You will enter it directly in the Expense Agent UI in Step 2.
 
 ---
 
-→ Continue to **Start the Mock APIs**
+→ Continue to **Explore the Mock APIs**

@@ -12,7 +12,7 @@ spec:
   authors:
   - Kong Technical Product Marketing
   difficulty: beginner    
-  url: https://github.com/Kong/kong-data-path-workshop
+  url: https://github.com/hguerreroo/datapath-workshop
   duration: 45m
   publish:
     image: docker.io/hguerreroo/lab-agent-loop-files:latest
@@ -45,14 +45,22 @@ spec:
         value: "https://$(PROXY)/mcp/hr"
       - name: POLICY_MCP_URL
         value: "https://$(PROXY)/mcp/policy"
+      - name: AGENT_URL
+        value: "$(ingress_protocol)://expense-agent-$(session_namespace).$(ingress_domain)"
     ingresses:
       - name: mcp-inspector
         port: 6274
         host: mcp-inspector-service
         protocol: TCP
+      - name: expense-agent
+        port: 80
+        host: expense-agent-service
+        protocol: TCP
     dashboards:
       - name: MCP Inspector
         url: "$(ingress_protocol)://mcp-inspector-$(session_namespace).$(ingress_domain)/"      
+      - name: Expense Agent
+        url: "$(ingress_protocol)://expense-agent-$(session_namespace).$(ingress_domain)/"      
   environment:
     objects:
     - apiVersion: apps/v1
@@ -109,3 +117,59 @@ spec:
         - port: 6277
           targetPort: 6277
           name: proxy
+    # Agent deployment resources
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: expense-agent
+        labels:
+          app: expense-agent
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: expense-agent
+        template:
+          metadata:
+            labels:
+              app: expense-agent
+          spec:
+            containers:
+            - name: expense-agent
+              image: docker.io/hguerreroo/expense-agent:1.0.0
+              imagePullPolicy: Always
+              ports:
+              - name: http
+                containerPort: 3000
+              env:
+              - name: PORT
+                value: "3000"
+              - name: NODE_ENV
+                value: "production"
+              resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "50m"
+                limits:
+                  memory: "256Mi"
+                  cpu: "500m"
+              volumeMounts:
+              - name: tmp
+                mountPath: /tmp
+            volumes:
+            - name: tmp
+              emptyDir: {}
+    - apiVersion: v1
+      kind: Service
+      metadata:
+        name: expense-agent-service
+        labels:
+          app: expense-agent
+      spec:
+        type: ClusterIP
+        selector:
+          app: expense-agent
+        ports:
+        - name: http
+          port: 80
+          targetPort: http

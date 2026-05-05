@@ -1,18 +1,19 @@
 ---
-title: Explore the Mock API Specs
+title: Explore the Mock APIs
 ---
 
 ## Step 1 — Explore the Mock API Specs
 
 The workshop uses three OpenAPI specs as stand-ins for real back-end systems.
 There are **no running services** — Kong's Mocking plugin reads the `example`
-fields directly from each spec and returns them as HTTP responses.
+fields directly from each spec and returns them as HTTP responses. The routes
+were created by Terraform when your session started.
 
-| Spec | Path | What it describes |
-|------|------|-------------------|
-| `expense-service/openapi.yaml` | `mock-apis/expense-service/` | Approve / reject / escalate decisions |
-| `hr-service/openapi.yaml` | `mock-apis/hr-service/` | Employee details and spending limits |
-| `policy-service/openapi.yaml` | `mock-apis/policy-service/` | Policy rules and expense evaluation |
+| Service | MCP endpoint | Tools it provides |
+|---------|-------------|-------------------|
+| Expense service | `$PROXY/mcp/expense` | `approveExpense`, `rejectExpense`, `escalateExpense` |
+| HR service | `$PROXY/mcp/hr` | `getEmployee` (spending limits, department) |
+| Policy service | `$PROXY/mcp/policy` | `getPolicy`, `evaluateExpense` |
 
 ### Read the expense spec
 
@@ -27,46 +28,49 @@ Notice three things:
 1. **Three action endpoints** — `/approve`, `/reject`, `/escalate`.
    Each `operationId` becomes the MCP tool name the agent will call.
 
-2. **`example` in each 200 response** — this is what Kong's Mocking plugin
-   returns. No upstream logic is needed; the example payload is the response.
+2. **`example` in each 200 response** — this is exactly what Kong's Mocking
+   plugin returns. No upstream logic is needed; the example payload is the
+   response.
 
 3. **No server block** — the spec describes the shape of the API, not where
-   it runs. Kong handles routing.
+   it runs. Kong handles routing and response fabrication.
 
-### Serve the specs locally
-
-Kong reads the spec files over HTTP when it bootstraps the AI MCP Proxy plugin.
-Start a local file server from the repo root:
+### Read the policy spec
 
 ```terminal:execute
-command: python3 -m http.server 8888 --directory mock-apis &
-echo "Spec server PID: $!"
+command: cat mock-apis/policy-service/openapi.yaml
 ```
 
-Set the environment variable used by decK:
+Find the `example` under `GET /policy`. This is the policy the agent will
+retrieve on every run: auto-approve limit, escalation threshold, restricted
+categories. Understanding this example helps you predict what the agent will
+decide before you run it.
+
+### How the plugin chain works
+
+Two Kong plugins are stacked on each MCP route and run in this order:
+
+| Order | Plugin | What it does |
+|-------|--------|-------------|
+| 1 | **AI MCP Proxy** (`conversion-listener`) | Translates inbound MCP `tools/call` JSON into a REST request |
+| 2 | **Mocking** | Intercepts the REST request *before* it leaves Kong and returns the spec `example` — the upstream is never contacted |
+
+The AI MCP Proxy then translates the REST response back into an MCP result
+and returns it to the caller. The upstream URL (`http://mock-expense.internal`)
+is a placeholder that is never resolved.
+
+### Inspect the Kong configuration
+
+The config that was applied by Terraform is available to read:
 
 ```terminal:execute
-command: export SPEC_BASE_URL=http://localhost:8888
-echo "SPEC_BASE_URL=$SPEC_BASE_URL"
+command: cat decK/lab1-agent-loop/kong.yaml
 ```
 
-> **Alternative:** After publishing the repo you can use the raw GitHub URL
-> instead:
-> ```
-> export SPEC_BASE_URL=https://raw.githubusercontent.com/Kong/kong-data-path-workshop/main/mock-apis
-> ```
-> This is useful in production instructor-led environments where students have
-> no local server.
-
-### Verify a spec is reachable
-
-```terminal:execute
-command: curl -s $SPEC_BASE_URL/expense-service/openapi.yaml | head -20
-```
-
-You should see the first lines of the OpenAPI YAML. If you get a connection
-error, check that the file server is still running.
+Find the plugin stanza for `expense-mcp` and confirm the two plugins are
+declared in the order above. There is nothing to sync — this exists only so
+you can understand exactly what Kong is doing on each tool call.
 
 ---
 
-→ Continue to **Expose APIs as MCP Tools**
+→ Continue to **Verify the MCP Tools**
