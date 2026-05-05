@@ -1,0 +1,187 @@
+openapi: "3.0.3"
+info:
+  title: HR Service
+  description: >
+    Provides employee and department context that the agent uses when
+    evaluating whether an expense is within the submitter's spending limits.
+    Kong's Mocking plugin serves these example responses directly —
+    no upstream service is required.
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:3002
+
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Liveness probe
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: ok
+                service: hr-service
+
+  /employees/{id}:
+    get:
+      operationId: getEmployee
+      summary: Look up an employee by ID
+      description: >
+        Returns the employee's name, department, title, and individual
+        spending limit. The agent uses spendingLimit to decide whether
+        to approve or escalate.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          examples:
+            emp-001:
+              value: emp-001
+              summary: Alice — junior engineer, $200 limit
+            emp-002:
+              value: emp-002
+              summary: Bob — senior engineer, $500 limit
+            emp-003:
+              value: emp-003
+              summary: Clara — engineering manager, $2000 limit
+      responses:
+        "200":
+          description: Employee record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+              examples:
+                emp-001:
+                  summary: Alice Nguyen — Software Engineer, $200 limit
+                  value:
+                    id: emp-001
+                    name: Alice Nguyen
+                    title: Software Engineer
+                    departmentId: dept-eng
+                    spendingLimit: 200
+                    managerId: emp-010
+                emp-002:
+                  summary: Bob Okafor — Senior Engineer, $500 limit
+                  value:
+                    id: emp-002
+                    name: Bob Okafor
+                    title: Senior Engineer
+                    departmentId: dept-eng
+                    spendingLimit: 500
+                    managerId: emp-010
+                emp-003:
+                  summary: Clara Reyes — Engineering Manager, $2000 limit
+                  value:
+                    id: emp-003
+                    name: Clara Reyes
+                    title: Engineering Manager
+                    departmentId: dept-eng
+                    spendingLimit: 2000
+                    managerId: emp-020
+        "404":
+          description: Employee not found
+          content:
+            application/json:
+              example:
+                message: Employee not found
+
+  /departments/{id}:
+    get:
+      operationId: getDepartment
+      summary: Look up a department by ID
+      description: >
+        Returns department-level spending limits and the manager's
+        contact, used for escalation routing.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          examples:
+            dept-eng:
+              value: dept-eng
+              summary: Engineering department
+      responses:
+        "200":
+          description: Department record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Department"
+              examples:
+                dept-eng:
+                  summary: Engineering
+                  value:
+                    id: dept-eng
+                    name: Engineering
+                    managerId: emp-003
+                    managerEmail: clara.reyes@example.com
+                    departmentSpendingLimit: 5000
+                dept-finance:
+                  summary: Finance
+                  value:
+                    id: dept-finance
+                    name: Finance
+                    managerId: emp-020
+                    managerEmail: finance-mgr@example.com
+                    departmentSpendingLimit: 10000
+        "404":
+          description: Department not found
+          content:
+            application/json:
+              example:
+                message: Department not found
+
+components:
+  schemas:
+    Employee:
+      type: object
+      properties:
+        id:
+          type: string
+          example: emp-001
+        name:
+          type: string
+          example: Alice Nguyen
+        title:
+          type: string
+          example: Software Engineer
+        departmentId:
+          type: string
+          example: dept-eng
+        spendingLimit:
+          type: number
+          description: Maximum expense amount this employee can self-approve (USD)
+          example: 200
+        managerId:
+          type: string
+          example: emp-010
+
+    Department:
+      type: object
+      properties:
+        id:
+          type: string
+          example: dept-eng
+        name:
+          type: string
+          example: Engineering
+        managerId:
+          type: string
+          example: emp-003
+        managerEmail:
+          type: string
+          example: clara.reyes@example.com
+        departmentSpendingLimit:
+          type: number
+          description: Maximum single expense amount for the department (USD)
+          example: 5000

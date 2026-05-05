@@ -1,0 +1,205 @@
+openapi: "3.0.3"
+info:
+  title: Policy Service
+  description: >
+    Returns company expense policy rules and evaluates whether a specific
+    expense complies with them. The agent calls this service to get the
+    reasoning context it needs before calling the expense service to act.
+    Kong's Mocking plugin serves these example responses directly —
+    no upstream service is required.
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:3003
+
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Liveness probe
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: ok
+                service: policy-service
+
+  /policy:
+    get:
+      operationId: getPolicy
+      summary: Retrieve the current expense policy
+      description: >
+        Returns the company-wide policy rules: approval thresholds,
+        categories that require receipts, and categories that always
+        require escalation regardless of amount.
+      responses:
+        "200":
+          description: Current policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+              example:
+                autoApproveLimit: 200
+                escalateThreshold: 1000
+                receiptRequiredAbove: 75
+                alwaysEscalateCategories:
+                  - travel
+                  - conference
+                  - equipment
+                alwaysRejectCategories:
+                  - personal
+                  - alcohol
+                  - gambling
+                version: "2025-Q2"
+
+  /evaluate:
+    post:
+      operationId: evaluateExpense
+      summary: Evaluate an expense against the current policy
+      description: >
+        Returns a structured recommendation — approve, reject, or escalate —
+        along with the specific rule that triggered it. The agent uses this
+        as a primary decision signal before calling the action tool.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluationRequest"
+            examples:
+              low-value-meals:
+                summary: Low-value meals expense (approve path)
+                value:
+                  amount: 150
+                  description: Team lunch
+                  employeeId: emp-001
+                  category: meals
+                  hasReceipt: false
+              prohibited-category:
+                summary: Prohibited category (reject path)
+                value:
+                  amount: 80
+                  description: Client dinner
+                  employeeId: emp-002
+                  category: alcohol
+                  hasReceipt: true
+              high-value-conference:
+                summary: High-value conference expense (escalate path)
+                value:
+                  amount: 2500
+                  description: Annual developer conference
+                  employeeId: emp-002
+                  category: conference
+                  hasReceipt: false
+      responses:
+        "200":
+          description: Policy evaluation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationResult"
+              examples:
+                approve:
+                  summary: Approved — within auto-approve limit
+                  value:
+                    recommendation: approve
+                    rule: within-auto-approve-limit
+                    explanation: "Amount $150 is within the $200 auto-approve limit and the 'meals' category is compliant."
+                    requiresReceipt: true
+                reject:
+                  summary: Rejected — prohibited category
+                  value:
+                    recommendation: reject
+                    rule: always-reject-category
+                    explanation: "Category 'alcohol' is not reimbursable under company policy."
+                    requiresReceipt: false
+                escalate-amount:
+                  summary: Escalated — amount exceeds threshold
+                  value:
+                    recommendation: escalate
+                    rule: amount-exceeds-threshold
+                    explanation: "Amount $2500 meets or exceeds the $1000 escalation threshold."
+                    requiresReceipt: true
+                escalate-category:
+                  summary: Escalated — always-escalate category
+                  value:
+                    recommendation: escalate
+                    rule: always-escalate-category
+                    explanation: "Category 'conference' requires manager sign-off regardless of amount."
+                    requiresReceipt: true
+
+components:
+  schemas:
+    Policy:
+      type: object
+      properties:
+        autoApproveLimit:
+          type: number
+          description: Expenses at or below this amount are auto-approvable (USD)
+          example: 200
+        escalateThreshold:
+          type: number
+          description: Expenses at or above this amount always require human sign-off (USD)
+          example: 1000
+        receiptRequiredAbove:
+          type: number
+          description: Receipt must be attached for expenses above this amount (USD)
+          example: 75
+        alwaysEscalateCategories:
+          type: array
+          items:
+            type: string
+          description: Categories that always require escalation regardless of amount
+          example: [travel, conference, equipment]
+        alwaysRejectCategories:
+          type: array
+          items:
+            type: string
+          description: Categories that are never reimbursable
+          example: [personal, alcohol, gambling]
+        version:
+          type: string
+          example: "2025-Q2"
+
+    EvaluationRequest:
+      type: object
+      required: [amount, description, employeeId]
+      properties:
+        amount:
+          type: number
+          example: 150
+        description:
+          type: string
+          example: Team lunch
+        employeeId:
+          type: string
+          example: emp-001
+        category:
+          type: string
+          example: meals
+        hasReceipt:
+          type: boolean
+          example: false
+
+    EvaluationResult:
+      type: object
+      properties:
+        recommendation:
+          type: string
+          enum: [approve, reject, escalate]
+          example: approve
+        rule:
+          type: string
+          description: The specific policy rule that drove this recommendation
+          example: within-auto-approve-limit
+        explanation:
+          type: string
+          example: "Amount $150 is within the $200 auto-approve limit."
+        requiresReceipt:
+          type: boolean
+          example: true
