@@ -1,0 +1,25 @@
+# kustomize build k8s/ | kubectl apply -f -
+# kubectl apply -k k8s/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: expense-agent
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+
+# ── Image tag override ────────────────────────────────────────────────────────
+# Update the newName / newTag here (or via CI) instead of editing deployment.yaml
+images:
+  - name: expense-agent
+    # newName: ghcr.io/konghq/expense-agent
+    newTag: latest
+
+# ── Common labels added to every resource ────────────────────────────────────
+commonLabels:
+  app.kubernetes.io/part-of: kong-datapath-workshop
+  app.kubernetes.io/managed-by: kustomize

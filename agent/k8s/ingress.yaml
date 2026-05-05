@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: expense-agent
+  namespace: expense-agent
+  labels:
+    app.kubernetes.io/name: expense-agent
+  annotations:
+    # ── Kong Ingress Controller ────────────────────────────────────────
+    # Uncomment if routing through the Kong Ingress Controller (KIC):
+    # kubernetes.io/ingress.class: "kong"
+    # konghq.com/strip-path: "false"
+    #
+    # ── nginx (alternative) ───────────────────────────────────────────
+    # kubernetes.io/ingress.class: "nginx"
+    # nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    #
+    # ── TLS via cert-manager ──────────────────────────────────────────
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  # ── TLS (enable once you have a real hostname + cert-manager) ────────
+  # tls:
+  #   - hosts:
+  #       - expense-agent.YOUR_DOMAIN
+  #     secretName: expense-agent-tls
+
+  rules:
+    - host: expense-agent.YOUR_DOMAIN   # ← replace with your hostname
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: expense-agent
+                port:
+                  name: http

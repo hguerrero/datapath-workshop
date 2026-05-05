@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: expense-agent
+  namespace: expense-agent
+  labels:
+    app.kubernetes.io/name: expense-agent
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: expense-agent
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0          # zero-downtime rollout
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: expense-agent
+        app.kubernetes.io/component: web
+    spec:
+      # ── Security context ─────────────────────────────────────────────
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000          # matches the 'node' user in node:alpine
+        fsGroup: 1000
+
+      containers:
+        - name: expense-agent
+          # ── Image ─────────────────────────────────────────────────────
+          # Replace with your registry path, e.g.:
+          #   ghcr.io/konghq/expense-agent:1.0.0
+          #   docker.io/YOUR_ORG/expense-agent:latest
+          image: expense-agent:latest
+          imagePullPolicy: IfNotPresent   # change to Always for registry images
+
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+
+          # ── Environment — sourced from ConfigMap ──────────────────────
+          envFrom:
+            - configMapRef:
+                name: expense-agent-config
+
+          # ── Health checks (uses the existing /api/ping endpoint) ──────
+          livenessProbe:
+            httpGet:
+              path: /api/ping
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /api/ping
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 2
+
+          # ── Resource limits ───────────────────────────────────────────
+          # Tune these based on observed usage. The agent calls an external
+          # LLM so CPU/memory are modest; most latency is network I/O.
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+
+          # ── Read-only filesystem ──────────────────────────────────────
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+
+          # Node.js needs a writable /tmp for its internal temp files
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      # Restart policy for Pods (Deployments always use Always)
+      restartPolicy: Always
