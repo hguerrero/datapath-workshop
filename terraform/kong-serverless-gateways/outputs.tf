@@ -6,6 +6,11 @@ output "serverless_gateway_urls" {
   }
 }
 
+output "demo_gateway_url" {
+  description = "Demo control plane (serverless-api-gateway-demo) serverless gateway URL"
+  value = "${split(".", data.konnect_gateway_control_plane.demo_cp.config.control_plane_endpoint)[0]}.us.serverless.gateways.konggateway.com"
+}
+
 # output "agent_api_keys" {
 #   description = "Per-student API keys for the expense-agent consumer. Distribute as $AGENT_API_KEY (Lab 2+). Marked sensitive — use 'terraform output -json agent_api_keys' to retrieve."
 #   sensitive   = true
