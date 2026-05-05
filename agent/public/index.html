@@ -27,13 +27,12 @@
           <h2 class="section-title">Gateway</h2>
 
           <label class="field">
-            <span class="label">Proxy URL</span>
+            <span class="label">Proxy URL <em>(optional)</em></span>
             <input
               id="proxy"
               type="url"
-              placeholder="https://…"
+              placeholder="https://… (leave empty for fallback mode)"
               spellcheck="false"
-              required
             />
           </label>
 
@@ -47,8 +46,8 @@
           <h2 class="section-title">LLM</h2>
 
           <label class="field">
-            <span class="label">OpenAI API Key</span>
-            <input id="openaiApiKey" type="password" placeholder="sk-…" required />
+            <span class="label">OpenAI API Key <em>(optional)</em></span>
+            <input id="openaiApiKey" type="password" placeholder="sk-... (leave empty to test without LLM)" />
           </label>
 
           <label class="field">

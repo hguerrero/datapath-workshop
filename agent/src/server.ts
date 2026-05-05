@@ -50,9 +50,9 @@ app.post("/api/run", async (req, res) => {
     expenseInput: string;
   };
 
-  if (!proxy || !openaiApiKey || !expenseInput) {
+  if (!expenseInput) {
     res.status(400).json({
-      error: "Missing required fields: proxy, openaiApiKey, expenseInput",
+      error: "Missing required field: expenseInput",
     });
     return;
   }

@@ -15,8 +15,8 @@
 import { agent, llmOpenAI, mcp } from "@volcano.dev/agent";
 
 export interface AgentRunConfig {
-  proxy: string;
-  openaiApiKey: string;
+  proxy?: string;       // optional - if missing, MCP servers won't be used
+  openaiApiKey?: string; // optional - if missing, agent won't use LLM
   llmProxy?: string;    // defaults to https://api.openai.com
   llmModel?: string;    // defaults to gpt-4o-mini
   agentApiKey?: string; // leave empty for Lab 1
@@ -48,22 +48,25 @@ export async function evaluateExpense(
   // in Lab 3 change llmProxy to $PROXY/llm to route through Kong AI Gateway.
   const llm = llmOpenAI({
     baseURL: cfg.llmProxy ?? "https://api.openai.com",
-    apiKey: cfg.openaiApiKey,
+    apiKey: cfg.openaiApiKey ?? "",
     model: cfg.llmModel ?? "gpt-4o-mini",
   });
 
-  // Three MCP servers — every tool call passes through Kong.
+  // Three MCP servers — only use them if proxy URL is provided
   // In Lab 2+ an agentApiKey is added as a Bearer token so Kong's
   // Key Auth plugin can authenticate the agent.
-  const mcpOptions = cfg.agentApiKey
-    ? { auth: { type: "bearer" as const, token: cfg.agentApiKey } }
-    : {};
+  const tools = [];
+  if (cfg.proxy) {
+    const mcpOptions = cfg.agentApiKey
+      ? { auth: { type: "bearer" as const, token: cfg.agentApiKey } }
+      : {};
 
-  const tools = [
-    // mcp(`${cfg.proxy}/mcp/expense`, mcpOptions),
-    // mcp(`${cfg.proxy}/mcp/hr`,      mcpOptions),
-    mcp(`${cfg.proxy}/mcp/policy`,  mcpOptions),
-  ];
+    tools.push(
+      // mcp(`${cfg.proxy}/mcp/expense`, mcpOptions),
+      // mcp(`${cfg.proxy}/mcp/hr`,      mcpOptions),
+      mcp(`${cfg.proxy}/mcp/policy`,  mcpOptions),
+    );
+  }
 
   const expenseApprover = agent({
     llm,
@@ -72,16 +75,17 @@ export async function evaluateExpense(
     instructions
   });
 
-  const result = await expenseApprover
+  let result;
+    result = await expenseApprover
     .then({ 
       prompt: "Retrieve the policy and summarize it", 
-      mcps: tools 
-    })
-    .then({ 
-      prompt: `Process the following expense: ${expenseInput}. Return the decision.`
-    })
-    .run();
-
+      // Use MCP tools if proxy is available
+        mcps: tools 
+      })
+      .then({ 
+        prompt: `Process the following expense: ${expenseInput}. Return the decision.`
+      })
+      .run();
   console.log(result)
 
   // The agent runs multiple steps (LLM → tool calls → LLM → …). The final

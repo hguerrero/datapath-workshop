@@ -11,19 +11,25 @@
 import "dotenv/config";
 import { evaluateExpense, type AgentRunConfig } from "./agent.js";
 
-function required(name: string): string {
-  const val = process.env[name];
-  if (!val) throw new Error(`Missing env var: ${name}. Copy .env.example → .env`);
-  return val;
+function optional(name: string): string | undefined {
+  return process.env[name] || undefined;
 }
 
 const cfg: AgentRunConfig = {
-  proxy:        required("PROXY"),
-  openaiApiKey: required("OPENAI_API_KEY"),
-  llmProxy:     process.env.LLM_PROXY,
-  llmModel:     process.env.LLM_MODEL,
-  agentApiKey:  process.env.AGENT_API_KEY,
+  proxy:        optional("PROXY"),
+  openaiApiKey: optional("OPENAI_API_KEY"),
+  llmProxy:     optional("LLM_PROXY"),
+  llmModel:     optional("LLM_MODEL"),
+  agentApiKey:  optional("AGENT_API_KEY"),
 };
+
+// Check if we have minimum required configuration
+if (!cfg.openaiApiKey) {
+  console.error("Warning: No OPENAI_API_KEY provided. Agent will not be able to make LLM calls.");
+}
+if (!cfg.proxy) {
+  console.log("Notice: No PROXY provided. Running in fallback mode without MCP servers.");
+}
 
 const DEFAULT_EXPENSE =
   'Alice (emp-001) is submitting an expense of $150 for "Team lunch".';

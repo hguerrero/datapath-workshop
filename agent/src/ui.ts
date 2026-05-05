@@ -393,8 +393,8 @@ function initializeUI() {
     var model     = document.getElementById('model').value.trim() || undefined;
     var expense   = document.getElementById('expense').value.trim();
 
-    if (!proxy || !openaiKey) {
-      setOutput('Set Gateway Proxy URL and OpenAI API Key first.', 'err');
+    if (!openaiKey) {
+      setOutput('OpenAI API Key is required for agent evaluation.', 'err');
       return;
     }
     if (!expense) {

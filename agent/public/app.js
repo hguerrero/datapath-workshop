@@ -152,14 +152,6 @@ btnRun.addEventListener("click", async () => {
   const openaiApiKey = openaiKeyEl.value.trim();
   const expenseInput = expenseEl.value.trim();
 
-  if (!proxy) {
-    setStatus("error", "Proxy URL is required.");
-    return;
-  }
-  if (!openaiApiKey) {
-    setStatus("error", "OpenAI API Key is required.");
-    return;
-  }
   if (!expenseInput) {
     setStatus("error", "Please describe the expense.");
     return;
