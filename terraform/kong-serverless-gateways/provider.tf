@@ -22,10 +22,19 @@ terraform {
       source  = "kong/konnect"
       version = "~> 3.14.0"
     }
+    konnect-beta = {
+      source  = "Kong/konnect-beta"
+      version = "~> 0.17.0"
+    }
   }
 }
 
 provider "konnect" {
+  personal_access_token = var.konnect_personal_access_token
+  server_url            = var.konnect_api_url
+}
+
+provider "konnect-beta" {
   personal_access_token = var.konnect_personal_access_token
   server_url            = var.konnect_api_url
 }

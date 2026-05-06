@@ -6,6 +6,20 @@ locals {
   ]
 }
 
+# ── Workshop System Account ───────────────────────────────────────────────────
+
+resource "konnect_system_account" "workshop_system_account" {
+  name         = var.workshop_system_account_name
+  description  = var.workshop_system_account_description
+  konnect_managed = false
+}
+
+# Assign system account to control plane admin team
+resource "konnect_system_account_team" "workshop_system_account_team" {
+  account_id = konnect_system_account.workshop_system_account.id
+  team_id    = data.konnect_team.control_plane_admin.id
+}
+
 # ── Per-student Serverless Control Planes ────────────────────────────────────
 
 resource "konnect_gateway_control_plane" "serverless_cp" {
@@ -33,6 +47,417 @@ resource "konnect_cloud_gateway_configuration" "serverless_gw" {
   ]
 
   kind = "serverless.v1"
+}
+
+# ── AI Gateway Analytics Dashboard ─────────────────────────────────────────
+
+resource "konnect_dashboard" "ai_gateway_dashboard" {
+  provider = konnect-beta
+  name     = "AI Gateway Analytics Dashboard"
+  
+  definition = {
+    tiles = [
+      {
+        chart = {
+          type = "chart"
+          layout = {
+            position = {
+              col = 0
+              row = 0
+            }
+            size = {
+              cols = 2
+              rows = 2
+            }
+          }
+          definition = {
+            chart = {
+              horizontal_bar = {
+                type        = "horizontal_bar"
+                stacked     = true
+                chart_title = "GenAI model usage count"
+              }
+            }
+            query = {
+              llm_usage = {
+                datasource = "llm_usage"
+                metrics    = ["ai_request_count"]
+                dimensions = ["ai_request_model"]
+                filters = [
+                  {
+                    field    = "ai_request_model"
+                    operator = "not_empty"
+                  },
+                  {
+                    field    = "ai_request_model"
+                    operator = "not_in"
+                    value    = jsonencode(["UNSPECIFIED"])
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        chart = {
+          type = "chart"
+          layout = {
+            position = {
+              col = 2
+              row = 0
+            }
+            size = {
+              cols = 2
+              rows = 2
+            }
+          }
+          definition = {
+            chart = {
+              horizontal_bar = {
+                type        = "vertical_bar"
+                stacked     = true
+                chart_title = "GenAI provider usage count"
+              }
+            }
+            query = {
+              llm_usage = {
+                datasource = "llm_usage"
+                metrics    = ["ai_request_count"]
+                dimensions = ["ai_provider"]
+                filters = [
+                  {
+                    field    = "ai_provider"
+                    operator = "not_empty"
+                  },
+                  {
+                    field    = "ai_provider"
+                    operator = "not_in"
+                    value    = jsonencode(["UNSPECIFIED"])
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        chart = {
+          type = "chart"
+          layout = {
+            position = {
+              col = 4
+              row = 0
+            }
+            size = {
+              cols = 2
+              rows = 2
+            }
+          }
+          definition = {
+            chart = {
+              donut = {
+                type        = "donut"
+                chart_title = "AI status codes"
+              }
+            }
+            query = {
+              llm_usage = {
+                datasource = "llm_usage"
+                metrics    = ["ai_request_count"]
+                dimensions = ["status_code_grouped"]
+                filters = [
+                  {
+                    field    = "gateway_service"
+                    operator = "not_empty"
+                  },
+                  {
+                    field    = "ai_provider"
+                    operator = "not_empty"
+                  },
+                  {
+                    field    = "ai_provider"
+                    operator = "not_in"
+                    value    = jsonencode(["UNSPECIFIED"])
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        chart = {
+          type = "chart"
+          layout = {
+            position = {
+              col = 0
+              row = 2
+            }
+            size = {
+              cols = 3
+              rows = 2
+            }
+          }
+          definition = {
+            chart = {
+              horizontal_bar = {
+                type        = "vertical_bar"
+                stacked     = true
+                chart_title = "AI security report"
+              }
+            }
+            query = {
+              llm_usage = {
+                datasource = "llm_usage"
+                metrics    = ["ai_request_count"]
+                dimensions = ["route", "status_code"]
+                filters = [
+                  {
+                    field    = "status_code_grouped"
+                    operator = "in"
+                    value    = jsonencode(["4XX"])
+                  },
+                  {
+                    field    = "ai_provider"
+                    operator = "not_empty"
+                  },
+                  {
+                    field    = "ai_provider"
+                    operator = "not_in"
+                    value    = jsonencode(["UNSPECIFIED"])
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        chart = {
+          type = "chart"
+          layout = {
+            position = {
+              col = 3
+              row = 2
+            }
+            size = {
+              cols = 3
+              rows = 2
+            }
+          }
+          definition = {
+            chart = {
+              timeseries_line = {
+                type        = "timeseries_line"
+                stacked     = false
+                chart_title = "Token usage by provider"
+              }
+            }
+            query = {
+              llm_usage = {
+                datasource = "llm_usage"
+                metrics    = ["total_tokens"]
+                dimensions = ["ai_provider", "time"]
+                filters = [
+                  {
+                    field    = "ai_provider"
+                    operator = "not_empty"
+                  },
+                  {
+                    field    = "ai_provider"
+                    operator = "not_in"
+                    value    = jsonencode(["UNSPECIFIED"])
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        chart = {
+          type = "chart"
+          layout = {
+            position = {
+              col = 0
+              row = 4
+            }
+            size = {
+              cols = 3
+              rows = 2
+            }
+          }
+          definition = {
+            chart = {
+              horizontal_bar = {
+                type        = "horizontal_bar"
+                stacked     = true
+                chart_title = "Consumer token usage"
+              }
+            }
+            query = {
+              llm_usage = {
+                datasource = "llm_usage"
+                metrics    = ["total_tokens"]
+                dimensions = ["consumer", "ai_provider"]
+                filters = [
+                  {
+                    field    = "consumer"
+                    operator = "not_empty"
+                  },
+                  {
+                    field    = "ai_provider"
+                    operator = "not_empty"
+                  },
+                  {
+                    field    = "ai_provider"
+                    operator = "not_in"
+                    value    = jsonencode(["UNSPECIFIED"])
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        chart = {
+          type = "chart"
+          layout = {
+            position = {
+              col = 3
+              row = 4
+            }
+            size = {
+              cols = 3
+              rows = 2
+            }
+          }
+          definition = {
+            chart = {
+              horizontal_bar = {
+                type        = "horizontal_bar"
+                stacked     = true
+                chart_title = "Cost per consumer ($)"
+              }
+            }
+            query = {
+              llm_usage = {
+                datasource = "llm_usage"
+                metrics    = ["cost"]
+                dimensions = ["consumer", "ai_provider"]
+                filters = [
+                  {
+                    field    = "consumer"
+                    operator = "not_empty"
+                  },
+                  {
+                    field    = "ai_provider"
+                    operator = "not_empty"
+                  },
+                  {
+                    field    = "ai_provider"
+                    operator = "not_in"
+                    value    = jsonencode(["UNSPECIFIED"])
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        chart = {
+          type = "chart"
+          layout = {
+            position = {
+              col = 0
+              row = 6
+            }
+            size = {
+              cols = 3
+              rows = 1
+            }
+          }
+          definition = {
+            chart = {
+              single_value = {
+                type        = "single_value"
+                decimal_points = 2
+                chart_title = "Total cost ($)"
+              }
+            }
+            query = {
+              llm_usage = {
+                datasource = "llm_usage"
+                metrics    = ["cost"]
+                dimensions = []
+                filters = [
+                  {
+                    field    = "ai_provider"
+                    operator = "not_empty"
+                  },
+                  {
+                    field    = "ai_provider"
+                    operator = "not_in"
+                    value    = jsonencode(["UNSPECIFIED"])
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        chart = {
+          type = "chart"
+          layout = {
+            position = {
+              col = 3
+              row = 6
+            }
+            size = {
+              cols = 3
+              rows = 1
+            }
+          }
+          definition = {
+            chart = {
+              single_value = {
+                type        = "single_value"
+                decimal_points = 2
+                chart_title = "Total AI gateway requests"
+              }
+            }
+            query = {
+              llm_usage = {
+                datasource = "llm_usage"
+                metrics    = ["ai_request_count"]
+                dimensions = []
+                filters = [
+                  {
+                    field    = "ai_provider"
+                    operator = "not_empty"
+                  },
+                  {
+                    field    = "ai_provider"
+                    operator = "not_in"
+                    value    = jsonencode(["UNSPECIFIED"])
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+  
+  labels = {
+    environment = "workshop"
+    purpose     = "ai-analytics"
+  }
 }
 
 # ── Config Store + Vault per student (LLM API keys) ──────────────────────────
@@ -97,6 +522,129 @@ resource "konnect_gateway_consumer" "expense_agent" {
 #   control_plane_id  = konnect_gateway_control_plane.serverless_cp[each.key].id
 #   # key is auto-generated by Konnect when omitted
 # }
+
+# ── Organization SSO Configuration ────────────────────────────────────────────
+
+# Create the OIDC identity provider (only if not already exists)
+resource "konnect_identity_provider" "org_sso_config" {
+  count = var.enable_sso_config ? 1 : 0
+
+  type       = "oidc"
+  login_path = var.workshop_sso_oidc_org_login_path
+  enabled    = true
+
+  config = {
+    oidc_identity_provider_config = {
+      issuer_url    = var.workshop_sso_oidc_issuer
+      client_id     = var.workshop_sso_oidc_client_id
+      client_secret = var.workshop_sso_oidc_client_secret
+
+      scopes = [
+        "openid",
+        "email",
+        "profile"
+      ]
+
+      claim_mappings = {
+        email  = "email"
+        name   = "name"
+        groups = "groups"
+      }
+    }
+  }
+}
+
+# Enable Organization SSO (only if creating identity provider)
+resource "konnect_authentication_settings" "enable_org_sso_config" {
+  count = var.enable_sso_config ? 1 : 0
+
+  basic_auth_enabled      = true
+  oidc_auth_enabled       = true
+  saml_auth_enabled       = false
+  idp_mapping_enabled     = true
+  konnect_mapping_enabled = true
+
+  depends_on = [konnect_identity_provider.org_sso_config]
+}
+
+# ── Collect default Konnect Teams for SSO Team Mappings ──────────────────────
+
+data "konnect_team" "organization_admin" {
+  filter = { name = { eq = "organization-admin" } }
+}
+
+data "konnect_team" "control_plane_admin" {
+  filter = { name = { eq = "control-plane-admin" } }
+}
+
+data "konnect_team" "organization_admin_readonly" {
+  filter = { name = { eq = "organization-admin-readonly" } }
+}
+
+data "konnect_team" "analytics_admin" {
+  filter = { name = { eq = "analytics-admin" } }
+}
+
+data "konnect_team" "portal_admin" {
+  filter = { name = { eq = "portal-admin" } }
+}
+
+# Create the Team Mappings (only if creating identity provider)
+resource "null_resource" "org_sso_team_mappings" {
+  count = var.enable_sso_config ? 1 : 0
+
+  provisioner "local-exec" {
+    command = <<EOT
+      curl --request PATCH \
+          --url "${var.konnect_api_url}/v3/identity-provider/team-group-mappings" \
+          --header "Authorization: Bearer ${var.konnect_personal_access_token}" \
+          --header 'Content-Type: application/json' \
+          --data '{
+          "data": [
+            {
+              "team_id": "${data.konnect_team.organization_admin.id}",
+              "groups": [
+                "Custom User",
+                "Custom Admin",
+                "Custom Viewer"
+              ]
+            },
+            {
+              "team_id": "${data.konnect_team.control_plane_admin.id}",
+              "groups": [
+                "Control Plane Admin"
+              ]
+            },
+            {
+              "team_id": "${data.konnect_team.organization_admin_readonly.id}",
+              "groups": [
+                "Organization Admin RO"
+              ]
+            },
+            {
+              "team_id": "${data.konnect_team.analytics_admin.id}",
+              "groups": [
+                "Analytics Admin"
+              ]
+            },
+            {
+              "team_id": "${data.konnect_team.portal_admin.id}",
+              "groups": [
+                "Portal Admin",
+                "API Product Developer",
+                "API Product Admin"
+              ]
+            }
+          ]
+        }'
+EOT
+  }
+
+  depends_on = [
+    konnect_identity_provider.org_sso_config,
+    konnect_authentication_settings.enable_org_sso_config
+  ]
+}
 
 # ── Reference Existing Demo Control Plane for Lab 1 Agent Loop ──────────────
 
@@ -1029,7 +1577,7 @@ resource "konnect_gateway_plugin_cors" "demo_global_cors" {
 # ── System account token (shared — used for decK syncs in lab instructions) ──
 
 resource "konnect_system_account_access_token" "token" {
-  account_id = var.system_account_id
+  account_id = konnect_system_account.workshop_system_account.id
   expires_at = timeadd(timestamp(), "8760h") # 1 year — refresh before next cohort
-  name       = "${var.student_name_prefix}workshop-token"
+  name       = "${var.student_name_prefix}-workshop-token"
 }

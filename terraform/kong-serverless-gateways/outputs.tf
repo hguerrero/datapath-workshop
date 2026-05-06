@@ -20,6 +20,14 @@ output "demo_gateway_url" {
 #   }
 # }
 
+output "system_account_info" {
+  description = "Workshop system account details"
+  value = {
+    id   = konnect_system_account.workshop_system_account.id
+    name = konnect_system_account.workshop_system_account.name
+  }
+}
+
 output "system_account_access_token" {
   description = "The generated system account access token"
   sensitive   = true
