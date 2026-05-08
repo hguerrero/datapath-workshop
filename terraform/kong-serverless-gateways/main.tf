@@ -674,10 +674,10 @@ resource "konnect_gateway_route" "policy_mcp" {
 
 resource "konnect_gateway_plugin_ai_mcp_proxy" "policy_mcp_ai_proxy" {
   control_plane_id = data.konnect_gateway_control_plane.demo_cp.id
+  instance_name    = "policy-mcp-ai-proxy"
   route = {
     id = konnect_gateway_route.policy_mcp.id
   }
-  
   config = {
     mode = "conversion-listener"
     logging = {
@@ -713,10 +713,10 @@ resource "konnect_gateway_route" "policy_api_route" {
 
 resource "konnect_gateway_plugin_mocking" "policy_api_mocking" {
   control_plane_id = data.konnect_gateway_control_plane.demo_cp.id
+  instance_name    = "policy-api-mocking"
   route = {
     id = konnect_gateway_route.policy_api_route.id
   }
-  
   config = {
     include_base_path  = true
     custom_base_path   = "/policy-api"
@@ -821,10 +821,10 @@ resource "konnect_gateway_route" "hr_mcp" {
 
 resource "konnect_gateway_plugin_ai_mcp_proxy" "hr_mcp_ai_proxy" {
   control_plane_id = data.konnect_gateway_control_plane.demo_cp.id
+  instance_name    = "hr-mcp-ai-proxy"
   route = {
     id = konnect_gateway_route.hr_mcp.id
   }
-  
   config = {
     mode = "conversion-listener"
     logging = {
@@ -885,16 +885,34 @@ resource "konnect_gateway_route" "hr_api_route" {
   service = {
     id = konnect_gateway_service.hr_api_service.id
   }
-  paths      = ["/hr-api"]
+  paths = [
+    "~/hr-api/employees/(?<employee_id>[^/]+)/?$",
+    "~/hr-api/departments/(?<department_id>[^/]+)/?$"
+  ]
   strip_path = true
+}
+
+resource "konnect_gateway_plugin_request_transformer_advanced" "hr_api_transformer" {
+  control_plane_id = data.konnect_gateway_control_plane.demo_cp.id
+  instance_name    = "hr-api-transformer"
+  route = {
+    id = konnect_gateway_route.hr_api_route.id
+  }
+  config = {
+    add = {
+      headers = [
+        "X-Kong-Mocking-Example-Id:$(uri_captures['employee_id'] or uri_captures['department_id'])"
+      ]
+    }
+  }
 }
 
 resource "konnect_gateway_plugin_mocking" "hr_api_mocking" {
   control_plane_id = data.konnect_gateway_control_plane.demo_cp.id
+  instance_name    = "hr-api-mocking"
   route = {
     id = konnect_gateway_route.hr_api_route.id
   }
-  
   config = {
     include_base_path  = true
     custom_base_path   = "/hr-api"
@@ -1095,10 +1113,10 @@ resource "konnect_gateway_route" "expense_mcp" {
 
 resource "konnect_gateway_plugin_ai_mcp_proxy" "expense_mcp_ai_proxy" {
   control_plane_id = data.konnect_gateway_control_plane.demo_cp.id
+  instance_name    = "expense-mcp-ai-proxy"
   route = {
     id = konnect_gateway_route.expense_mcp.id
   }
-  
   config = {
     mode = "conversion-listener"
     logging = {
@@ -1271,10 +1289,10 @@ resource "konnect_gateway_route" "expense_api_route" {
 
 resource "konnect_gateway_plugin_mocking" "expense_api_mocking" {
   control_plane_id = data.konnect_gateway_control_plane.demo_cp.id
+  instance_name    = "expense-api-mocking"
   route = {
     id = konnect_gateway_route.expense_api_route.id
   }
-  
   config = {
     include_base_path  = true
     custom_base_path   = "/expense-api"
