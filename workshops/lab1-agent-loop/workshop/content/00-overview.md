@@ -2,58 +2,51 @@
 title: Overview
 ---
 
-## Lab 1 — The Agent Loop
+## Overview
 
-In this lab you will explore a complete AI agent data path that has already
-been provisioned for you by the workshop Terraform configuration:
+### Lab 1 — The Agent Loop
+
+You have a running expense-approval agent. It calls OpenAI directly.
+You have zero visibility into those calls, no way to rate-limit them,
+no way to rotate the API key without redeploying the agent.
+
+This lab fixes that — before you touch the agent at all.
+
+### The outside-in mental model
+
+Every lab in this series adds governance by working **outside-in**: start
+at the outermost boundary of the system, add a control point, then step
+inward. Never start inside and work out.
 
 ```
-Expense Agent UI  (dashboard tab)
-  │
-  ▼
-Kong Serverless Gateway   ←── observability & control for every hop
-  │
-  ├── /mcp/expense  ──▶  expense-service  (approve / reject / escalate)
-  ├── /mcp/hr       ──▶  hr-service       (employee & department lookup)
-  └── /mcp/policy   ──▶  policy-service   (policy rules & evaluation)
-  │
-  ▼
-LLM  (OpenAI — direct call; Kong AI Gateway is added in Lab 3)
+┌──────────────────────────────────────────────────────────────┐
+│  Kong Gateway                             ← you start here   │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │  Agent reasoning loop                                  │  │
+│  │  ┌──────────────────┐   ┌────────────────────────────┐ │  │
+│  │  │  LLM (OpenAI)    │   │  MCP tools (policy/HR/exp) │ │  │
+│  │  └──────────────────┘   └────────────────────────────┘ │  │
+│  └────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-The agent is built with the [Volcano Agent SDK](https://volcano.dev) — an
-MCP-native TypeScript framework. The three back-end services are **mock APIs**:
-Kong's Mocking plugin reads `example` payloads directly from each OpenAPI spec
-and returns them as HTTP responses — no upstream processes needed.
+The outermost boundary is the **LLM call**. Every time the agent reasons,
+it calls OpenAI. That is the highest-value control point — and the one
+you will govern in this lab.
 
-### What's already running
+### What you will do
 
-| Component | Location |
-|-----------|----------|
-| Kong Serverless Gateway + MCP routes | `$PROXY` — see your terminal |
-| Expense Agent UI | **Expense Agent** tab (top of this window) |
-| MCP Inspector | **MCP Inspector** tab |
+1. Set your OpenAI API key in the session and confirm no `/llm` route exists yet
+2. Define the `llm-service`, the `/llm` route, and the `ai-proxy` plugin in a decK config
+3. Sync that config to your Kong gateway — the route is live
+4. Open the Expense Agent, point it at `$PROXY/llm`, and leave its key field empty
+5. Run expenses and watch Kong log every LLM call with model, tokens, and latency
 
-Everything above was provisioned by Terraform when your session started.
-Your only job in this lab is to **connect your OpenAI key** to the agent and
-observe the full data path in action.
+### What you gain (without changing a line of agent code)
 
-### What you'll do
-
-1. Verify the gateway and MCP tools are ready
-2. Explore the mock API specs to understand how Kong serves them
-3. Open the Expense Agent dashboard and enter your OpenAI API key
-4. Run expense scenarios and observe the agent's decisions
-5. Trace every request through Kong
-
-### Mental model — outside-in
-
-Agents are autonomous, but autonomy without governance creates risk.
-This workshop teaches you to think **outside-in**: the control plane (Kong)
-wraps the agent and you work inward — never the other way around.
-
-Every lab adds a control point. By the end of Lab 3 you will have a fully
-governed data path without changing a single line of agent code.
+- **Credential isolation** — the OpenAI key lives in Kong; the agent never holds it
+- **Full LLM observability** — every reasoning step is a logged Kong request
+- **A platform** — rate limiting, failover, guardrails, and caching are one plugin away
 
 ---
 

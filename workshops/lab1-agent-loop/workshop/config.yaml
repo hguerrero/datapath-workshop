@@ -5,16 +5,12 @@ steps:
   - title: "Overview"
     file: 00-overview
   - title: "Your Environment"
-    file: 01-prerequisites
-  - title: "Explore the Mock APIs"
-    file: 02-start-mock-apis
-  - title: "Verify the MCP Tools"
-    file: 03-expose-as-mcp
-  - title: "Open the Agent Dashboard"
-    file: 04-start-agent
-  - title: "Your First Decisions"
-    file: 05-first-decision
-  - title: "Trace the Data Path"
-    file: 06-trace-the-path
+    file: 01-environment
+  - title: "Configure the AI Gateway"
+    file: 02-configure-ai-gateway
+  - title: "Connect the Agent"
+    file: 03-connect-agent
+  - title: "Observe Governance"
+    file: 04-observe-governance
   - title: "Summary"
-    file: 07-summary
+    file: 05-summary
