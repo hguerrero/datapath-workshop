@@ -74,10 +74,13 @@ function hideStatus() {
 // ── Decision detection ────────────────────────────────────────────────────────
 /** @param {string} text @returns {"approve"|"reject"|"escalate"|"unknown"} */
 function detectDecision(text) {
-  const t = text.toUpperCase();
-  if (t.includes("APPROVE")) return "approve";
-  if (t.includes("REJECT"))  return "reject";
-  if (t.includes("ESCALATE")) return "escalate";
+  const matches = Array.from(text.toLocaleLowerCase().matchAll(/\b(approve|approved|reject|rejected|escalate|escalated)\b/gi));
+  if (matches.length === 0) return "unknown";
+  
+  const lastMatch = matches[matches.length - 1][1].toLowerCase();
+  if (lastMatch.startsWith("approve")) return "approve";
+  if (lastMatch.startsWith("reject")) return "reject";
+  if (lastMatch.startsWith("escalate")) return "escalate";
   return "unknown";
 }
 
