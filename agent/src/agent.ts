@@ -9,7 +9,7 @@
  *   Kong proxy → /mcp/policy   → policy-service    (policy rules + evaluate)
  *
  * evaluateExpense() accepts an AgentRunConfig so both the CLI (index.ts) and
- * the UI server (ui.ts) share the same logic without any env var requirement.
+ * the UI server (server.ts) share the same logic without any env var requirement.
  */
 
 import { agent, llmOpenAI, mcp } from "@volcano.dev/agent";
@@ -46,9 +46,11 @@ export async function evaluateExpense(
 ): Promise<string> {
   // LLM configuration — in Labs 1–2 this hits the provider directly;
   // in Lab 3 change llmProxy to $PROXY/llm to route through Kong AI Gateway.
+  // When routing through Kong AI Gateway the vault injects the real key;
+  // pass a placeholder so the OpenAI SDK doesn't throw a missing-key error.
   const llm = llmOpenAI({
     baseURL: cfg.llmProxy ?? "https://api.openai.com",
-    apiKey: cfg.openaiApiKey ?? "",
+    apiKey: cfg.openaiApiKey || "kong-injected",
     model: cfg.llmModel ?? "gpt-4o-mini",
   });
 
