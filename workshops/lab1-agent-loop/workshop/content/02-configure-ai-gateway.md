@@ -2,17 +2,14 @@
 title: Configure the AI Gateway
 ---
 
-## Configure the AI Gateway
-
 ### Step 1 — In Konnect
 
-Open the **Konnect** tab in your browser (or navigate to the URL in
-`$KONNECT_URL`). You will create an AI Gateway, wire it to OpenAI, and
-expose it on the path `/llm` — all through the UI.
+In the **Konnect** tab you opened in the previous step, create an AI
+Gateway, wire it to OpenAI, and expose it on the path `/llm` — all
+through the UI.
 
-```dashboard:create-dashboard
-name: Konnect
-url: https://cloud.konghq.com/us/welcome/
+```dashboard:open-url
+url: https://cloud.konghq.com/login/{{< param training_portal >}}
 ```
 
 ---

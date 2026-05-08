@@ -2,8 +2,6 @@
 title: Overview
 ---
 
-## Overview
-
 ### Lab 1 — The Agent Loop
 
 You have a running expense-approval agent. It calls OpenAI directly.

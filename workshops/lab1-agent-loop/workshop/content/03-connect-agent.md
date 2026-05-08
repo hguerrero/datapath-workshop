@@ -2,8 +2,6 @@
 title: Connect the Agent
 ---
 
-## Connect the Agent
-
 ### Step 2 — To the AI Gateway
 
 The gateway is live. Now point the agent at it with two field values.
@@ -12,16 +10,20 @@ The gateway is live. Now point the agent at it with two field values.
 
 Click the **Expense Agent** tab at the top of this window.
 
+```dashboard:open-dashboard
+name: Expense Agent
+```
+
 ### Configure the agent
 
 Fill in the sidebar fields exactly as shown below, then click **Save Config**.
 
 | Section | Field | Value |
 |---------|-------|-------|
-| Gateway | Proxy URL | The AI Gateway base URL from the previous step (e.g. `https://19b19044c3.us.serverless.gateways.konghq.com`) |
+| Gateway | Proxy URL | Leave empty — not used now |
 | Gateway | Agent API Key | Leave empty — not used until Lab 2 |
 | LLM | OpenAI API Key | **Leave empty** — Kong injects the key; the agent does not need it |
-| LLM | LLM Proxy | Same base URL with `/llm` appended (e.g. `https://19b19044c3.us.serverless.gateways.konghq.com/llm`) |
+| LLM | LLM Proxy | Same base URL with `/llm` appended (e.g. `https://xxxx.us.serverless.gateways.konghq.com/llm`) |
 | LLM | Model | Leave empty to use the default (`gpt-4o-mini`) |
 
 ![Agent UI — Proxy URL and LLM Proxy filled in, OpenAI key left empty]({{< baseurl >}}/images/08-add-llm-proxy-url-to-agent.png)

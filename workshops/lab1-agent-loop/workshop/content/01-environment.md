@@ -2,10 +2,6 @@
 title: Your Environment
 ---
 
-## Your Environment
-
-### Step 0
-
 ### What your instructor has provided
 
 Before starting, make sure you have received the following from your
@@ -25,7 +21,11 @@ your instructor — you will not need to paste it anywhere.
 Open the **Konnect URL** and the **Expense Agent URL** in separate tabs.
 
 ```dashboard:open-url
-url: https://cloud.konghq.com/login/datapath/
+url: https://cloud.konghq.com/login/{{< param training_portal >}}
+```
+
+```dashboard:open-dashboard
+name: Expense Agent
 ```
 
 Keep it open — you will switch between this instructions and the portal throughout the lab.

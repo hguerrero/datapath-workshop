@@ -2,8 +2,6 @@
 title: Summary
 ---
 
-## Summary
-
 ### Lab 1 Complete
 
 You built the first governance layer — starting from the outside, exactly

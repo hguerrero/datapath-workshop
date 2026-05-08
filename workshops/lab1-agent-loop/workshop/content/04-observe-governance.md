@@ -2,8 +2,6 @@
 title: Observe Governance
 ---
 
-## Observe Governance
-
 ### Step 3 — See What Kong Captured
 
 Run a couple more expenses — try **✈️ Conference trip · $2,500** and

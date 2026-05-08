@@ -5,9 +5,10 @@ metadata:
 spec:
   title: "Kong Data Path — Lab 1: The Agent Loop"
   description: >
-    Wire a Volcano-powered expense approval agent to three mock APIs exposed
-    as MCP tools through Kong's AI MCP Proxy Plugin. Trace every hop of the
-    data path: client → Kong → agent → Kong → LLM, Kong → MCP tools.
+    Govern an expense-approval agent by routing its OpenAI calls through Kong
+    AI Gateway. Create a vault-backed /llm route, connect the model with the
+    ai-proxy plugin, run governed expense scenarios, and observe model usage,
+    tokens, latency, and status codes in Konnect.
   vendor: konghq.com
   authors:
   - Kong Technical Product Marketing
