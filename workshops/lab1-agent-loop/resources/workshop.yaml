@@ -34,32 +34,18 @@ spec:
       terminal:
         enabled: true
       editor:
-        enabled: true
+        enabled: false
       console:
         enabled: false
     env:
-      - name: PROXY
-        value: "$(session_namespace)-proxy.$(ingress_domain)"
-      - name: EXPENSE_MCP_URL
-        value: "https://$(PROXY)/mcp/expense"
-      - name: HR_MCP_URL
-        value: "https://$(PROXY)/mcp/hr"
-      - name: POLICY_MCP_URL
-        value: "https://$(PROXY)/mcp/policy"
       - name: AGENT_URL
         value: "$(ingress_protocol)://expense-agent-$(session_namespace).$(ingress_domain)"
     ingresses:
-      - name: mcp-inspector
-        port: 6274
-        host: mcp-inspector-service
-        protocol: TCP
       - name: expense-agent
         port: 80
         host: expense-agent-service
         protocol: TCP
     dashboards:
-      - name: MCP Inspector
-        url: "$(ingress_protocol)://mcp-inspector-$(session_namespace).$(ingress_domain)/"      
       - name: Expense Agent
         url: "$(ingress_protocol)://expense-agent-$(session_namespace).$(ingress_domain)/"      
   environment:
