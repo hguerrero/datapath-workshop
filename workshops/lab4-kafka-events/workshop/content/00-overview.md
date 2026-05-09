@@ -2,39 +2,92 @@
 title: Overview
 ---
 
-## Lab 4 — Kafka Event Trail (Optional)
+## Lab 4 — Governing the Way Out
 
-This lab adds one more hop to the governed data path: every expense decision
-the agent makes is also published as a Kafka event, giving you an immutable
-audit trail and the foundation for event-driven downstream systems.
+Every lab so far has governed the **way in**: what context the agent is
+allowed to retrieve, from which sources, under which identity.
+
+- **Lab 1** established the LLM proxy — every inference call is routed,
+  observable, and rate-limited before it reaches a model.
+- **Lab 2** introduced MCP tool access — the agent can only call policy tools
+  through an authenticated, governed route.
+- **Lab 3** added LLM governance plugins — token budgets, failover, prompt
+  guards, and semantic caching on the retrieval path.
+
+But governance of an AI data path isn't only about retrieval. Every decision
+the agent makes is also a **write** — a mutation that flows back out into your
+systems. If that outbound channel is uncontrolled, you have half a governance
+story.
 
 ```
-Before:
-  Agent  ──▶  Kong  ──▶  expense-service  ──▶  (decision stored in memory)
-
-After:
-  Agent  ──▶  Kong  ──▶  expense-service  ──▶  decision stored in memory
-                  │
-                  └──▶  Kafka topic: expense-decisions  ──▶  consumers...
+Way in  (retrieval)                     Way out  (mutation)
+─────────────────────────────────────── ──────────────────────────────────────
+Agent → Kong → /llm → OpenAI            Agent decision → ??? → downstream
+Agent → Kong → /mcp/policy → MCP server
 ```
 
-The key point: **Kong publishes the event**. The agent doesn't know about
-Kafka. The expense-service doesn't know about Kafka. Kong intercepts the
-request and fans it out — zero code changes on either side.
+Lab 4 closes that gap. Kong Event Gateway sits on the outbound channel and
+brings the same principles — identity, isolation, default-deny — to the Kafka
+event stream that carries every agent decision.
 
-### What you'll do
+```
+Way in  (retrieval)                     Way out  (mutation)
+─────────────────────────────────────── ──────────────────────────────────────
+Agent → Kong → /llm → OpenAI            Kafka client
+Agent → Kong → /mcp/policy → MCP server     │  OAUTHBEARER (Kong Identity)
+                                            ▼
+                                        Kong Event Gateway
+                                            │  namespace · ACLs · TLS
+                                            ▼
+                                        Shared Kafka Broker
+                                            expense-decisions
+                                            audit-log
+                                            agent-traces
+```
 
-1. Start a local Kafka broker
-2. Add Kong's Kafka Upstream plugin to the decision route
-3. Run the agent and watch decisions land in the Kafka topic
-4. Consume events and explore downstream patterns
+The same Kong Identity authorization server from Lab 2 is the identity
+provider here. The same default-deny ACL philosophy from Labs 2 and 3 is
+applied at the Kafka protocol layer. One control plane, both directions.
 
-### Prerequisites
+### What's already provisioned
 
-This lab can be run standalone or on top of Labs 1–3. If running standalone,
-complete Lab 1 first to set up the mock APIs and agent. The Kafka plugin
-does not depend on Labs 2 or 3.
+The instructor has set up everything you need to get started:
+
+| Component | Status | Details |
+|-----------|--------|---------|
+| Kafka cluster | ✅ Running | Topics pre-created with your `$STUDENT_ID_` prefix |
+| Event Gateway control plane | ✅ Running | Visible in your Konnect organisation |
+| Event Gateway data plane | ✅ Running | Accepting Kafka client connections |
+
+Your job is to wire up the configuration on the control plane: a **backend
+cluster** (points to the real Kafka broker), a **virtual cluster** (your
+tenant-isolated view with OAuth and a namespace), a **listener** (the port
+clients connect to), and **ACL policies** (which topics your identity can use).
+
+### What you'll build
+
+```
+Listener  :$EVENT_GW_PORT
+    │  port-mapping policy
+    ▼
+Virtual Cluster  student-01-cluster
+    │  Auth:      OAuth 2.0 / OIDC  →  Kong Identity  (same IdP as Lab 2)
+    │  Namespace: prefix = student-01_  ·  mode = hide_prefix
+    │  ACL mode:  enforce_on_gateway
+    ▼
+Backend Cluster  student-01-kafka
+    ▼
+Shared Kafka Broker  $KAFKA_BOOTSTRAP
+```
+
+### Steps
+
+1. Create a **backend cluster** pointing at the shared Kafka broker
+2. Create a **virtual cluster** — OAuth auth via Kong Identity, namespace prefix for isolation
+3. Configure a **listener** with a port-mapping policy
+4. Add **ACL policies** using your OAuth client ID as the principal
+5. Test with `kcat` — token fetched automatically via OAUTHBEARER/OIDC
 
 ---
 
-→ Continue to **Kafka Setup**
+→ Continue to **Backend Cluster**

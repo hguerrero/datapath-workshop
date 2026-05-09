@@ -1,10 +1,18 @@
-title: "Kong Data Path — Lab 4: Kafka Event Trail (Optional)"
+title: "Kong Data Path — Lab 4: Governing the Way Out"
 logo: static/images/kong-logo.png
 
 steps:
-  - 00-overview
-  - 01-kafka-setup
-  - 02-decision-events
-  - 03-consume-events
-  - 04-governance-patterns
-  - 05-summary
+  - title: "Overview"
+    file: 00-overview
+  - title: "Backend Cluster"
+    file: 01-backend-cluster
+  - title: "Virtual Cluster"
+    file: 02-virtual-cluster
+  - title: "Listener"
+    file: 03-listener
+  - title: "Topic ACLs"
+    file: 04-acl
+  - title: "Test & Verify"
+    file: 05-test
+  - title: "Summary"
+    file: 06-summary

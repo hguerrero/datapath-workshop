@@ -3,11 +3,15 @@ kind: Workshop
 metadata:
   name: lab-data-path-kafka
 spec:
-  title: "Kong Data Path — Lab 4: Kafka Event Trail (Optional)"
+  title: "Kong Data Path — Lab 4: Governing the Way Out"
   description: >
-    Attach Kong's Kafka Upstream plugin to the expense decision route.
-    Every agent decision becomes a Kafka event — immutable audit trail,
-    event-driven governance, and the foundation for downstream automation.
+    Labs 1–3 governed the way in — every LLM call, MCP tool lookup, and
+    retrieval operation controlled at the gateway. Lab 4 completes the story
+    by governing the way out: agent decisions flowing into Kafka are proxied
+    through Kong Event Gateway with OAuth identity (reusing the Kong Identity
+    server from Lab 2), per-student namespace isolation, and default-deny ACLs
+    enforced at the gateway layer — the same principles applied to the
+    retrieval path, now applied to mutation.
   vendor: konghq.com
   authors:
   - Kong Technical Product Marketing
@@ -43,3 +47,19 @@ spec:
         value: "$(agent_api_key)"
       - name: KAFKA_BOOTSTRAP
         value: "$(kafka_bootstrap)"
+      - name: EVENT_GW_HOST
+        value: "$(event_gw_host)"
+      - name: EVENT_GW_PORT
+        value: "$(event_gw_port)"
+      - name: STUDENT_ID
+        value: "$(session_namespace)"
+      - name: ISSUER_URL
+        value: "$(issuer_url)"
+      - name: TOKEN_ENDPOINT
+        value: "$(token_endpoint)"
+      - name: CLIENT_ID
+        value: "$(client_id)"
+      - name: CLIENT_SECRET
+        value: "$(client_secret)"
+      - name: KONNECT_TOKEN
+        value: "$(konnect_token)"
