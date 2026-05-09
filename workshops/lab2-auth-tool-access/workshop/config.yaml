@@ -14,5 +14,7 @@ steps:
     file: 04-policy-in-action
   - title: "Secure the MCP Server"
     file: 05-secure-the-mcp
+  - title: "Observe MCP Traffic"
+    file: 06-observability
   - title: "Summary"
-    file: 06-summary
+    file: 07-summary

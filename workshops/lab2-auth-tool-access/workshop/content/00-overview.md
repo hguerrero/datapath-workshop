@@ -32,7 +32,7 @@ Lab 2 result:
 2. **Discover the Policy MCP server** — explore it with MCP Inspector and find the `getPolicy` tool
 3. **Connect the agent** — point the agent at Kong's proxy so it can reach the MCP server
 4. **See policy kick in** — same request, now rejected with a specific policy reason
-5. **Secure the MCP server** — it's currently open to anyone; add key authentication
+5. **Secure the MCP server** — it's currently open to anyone; add OAuth2 authentication using Kong Identity
 
 ### The governance insight
 

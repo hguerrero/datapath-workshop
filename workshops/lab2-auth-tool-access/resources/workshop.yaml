@@ -3,16 +3,19 @@ kind: Workshop
 metadata:
   name: lab-data-path-auth
 spec:
-  title: "Kong Data Path — Lab 2: Auth & Tool Access Control"
+  title: "Kong Data Path — Lab 2: MCP Tool Access & Policy"
   description: >
-    Add key authentication and ACL scoping to tool routes. Create a named
-    Kong consumer for the Volcano agent and restrict which MCP tools each
-    consumer is allowed to call.
+    Discover a corporate Policy MCP server via MCP Inspector, connect the
+    agent to it through Kong, and watch a $250 expense get rejected because
+    of the company's $200 auto-approval limit. Then secure the /mcp/policy
+    route with the AI MCP OAuth2 plugin backed by Kong Identity — requiring
+    a Bearer token for every tool call. Observe MCP traffic in the Agentic
+    analytics dashboard.
   vendor: konghq.com
   authors:
   - Kong Technical Product Marketing
   difficulty: beginner
-  url: https://github.com/Kong/kong-data-path-workshop
+  url: https://github.com/hguerreroo/datapath-workshop
   duration: 45m
   publish:
     image: docker.io/hguerreroo/lab-auth-tool-access-files:latest
