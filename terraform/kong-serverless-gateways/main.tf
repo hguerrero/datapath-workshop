@@ -4,6 +4,8 @@ locals {
     for i in range(var.student_start_number, var.student_count + var.student_start_number) :
     format("%02d", i)
   ]
+
+  demo_gateway_host = "${split(".", split(":", split("/", trimprefix(trimprefix(data.konnect_gateway_control_plane.demo_cp.config.control_plane_endpoint, "https://"), "http://"))[0])[0])[0]}.us.serverless.gateways.konggateway.com"
 }
 
 # ── Workshop System Account ───────────────────────────────────────────────────
@@ -700,6 +702,48 @@ resource "konnect_gateway_plugin_ai_mcp_proxy" "policy_mcp_ai_proxy" {
   }
 }
 
+# Per-student copies of the Lab 1 MCP proxy stack
+resource "konnect_gateway_service" "student_policy_api_service" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  name             = "${var.student_name_prefix}${each.key}-policy-api-service"
+  protocol         = "https"
+  host             = local.demo_gateway_host
+  path             = "/mcp/policy"
+  port             = 443
+}
+
+resource "konnect_gateway_route" "student_policy_mcp" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  name             = "${var.student_name_prefix}${each.key}-policy-mcp"
+  service = {
+    id = konnect_gateway_service.student_policy_api_service[each.key].id
+  }
+  paths = ["/mcp/policy"]
+}
+
+resource "konnect_gateway_plugin_ai_mcp_proxy" "student_policy_mcp_ai_proxy" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  instance_name    = "${var.student_name_prefix}${each.key}-policy-mcp-ai-proxy"
+  route = {
+    id = konnect_gateway_route.student_policy_mcp[each.key].id
+  }
+  config = {
+    mode = "passthrough-listener"
+    logging = {
+      log_audits     = true
+      log_payloads   = true
+      log_statistics = true
+    }
+    max_request_body_size = 32768
+  }
+}
+
 # Policy API Route with Mocking Plugin
 resource "konnect_gateway_route" "policy_api_route" {
   control_plane_id = data.konnect_gateway_control_plane.demo_cp.id
@@ -875,6 +919,47 @@ resource "konnect_gateway_plugin_ai_mcp_proxy" "hr_mcp_ai_proxy" {
         ]
       }
     ]
+  }
+}
+
+resource "konnect_gateway_service" "student_hr_api_service" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  name             = "${var.student_name_prefix}${each.key}-hr-api-service"
+  protocol         = "https"
+  host             = local.demo_gateway_host
+  path             = "/mcp/hr"
+  port             = 443
+}
+
+resource "konnect_gateway_route" "student_hr_mcp" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  name             = "${var.student_name_prefix}${each.key}-hr-mcp"
+  service = {
+    id = konnect_gateway_service.student_hr_api_service[each.key].id
+  }
+  paths = ["/mcp/hr"]
+}
+
+resource "konnect_gateway_plugin_ai_mcp_proxy" "student_hr_mcp_ai_proxy" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  instance_name    = "${var.student_name_prefix}${each.key}-hr-mcp-ai-proxy"
+  route = {
+    id = konnect_gateway_route.student_hr_mcp[each.key].id
+  }
+  config = {
+    mode = "passthrough-listener"
+    logging = {
+      log_audits     = true
+      log_payloads   = true
+      log_statistics = true
+    }
+    max_request_body_size = 32768
   }
 }
 
@@ -1273,6 +1358,47 @@ resource "konnect_gateway_plugin_ai_mcp_proxy" "expense_mcp_ai_proxy" {
         })
       }
     ]
+  }
+}
+
+resource "konnect_gateway_service" "student_expense_api_service" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  name             = "${var.student_name_prefix}${each.key}-expense-api-service"
+  protocol         = "https"
+  host             = local.demo_gateway_host
+  path             = "/mcp/expense"
+  port             = 443
+}
+
+resource "konnect_gateway_route" "student_expense_mcp" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  name             = "${var.student_name_prefix}${each.key}-expense-mcp"
+  service = {
+    id = konnect_gateway_service.student_expense_api_service[each.key].id
+  }
+  paths = ["/mcp/expense"]
+}
+
+resource "konnect_gateway_plugin_ai_mcp_proxy" "student_expense_mcp_ai_proxy" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  instance_name    = "${var.student_name_prefix}${each.key}-expense-mcp-ai-proxy"
+  route = {
+    id = konnect_gateway_route.student_expense_mcp[each.key].id
+  }
+  config = {
+    mode = "passthrough-listener"
+    logging = {
+      log_audits     = true
+      log_payloads   = true
+      log_statistics = true
+    }
+    max_request_body_size = 32768
   }
 }
 
