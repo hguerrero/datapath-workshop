@@ -51,6 +51,30 @@ resource "konnect_cloud_gateway_configuration" "serverless_gw" {
   kind = "serverless.v1"
 }
 
+# Identity Auth Server per student
+resource "konnect_identity_auth_server" "student_auth_server" {
+  for_each = toset(local.student_ids)
+
+  name        = "${var.student_name_prefix}${each.key}-auth-server"
+  description = "Identity auth server for ${var.student_name_prefix}${each.key}"
+  audience    = "https://${var.student_name_prefix}${each.key}.example.com"
+}
+
+# Identity Auth Server Client (Application) per student
+resource "konnect_identity_auth_server_client" "student_application" {
+  for_each = toset(local.student_ids)
+
+  name           = "${var.student_name_prefix}${each.key}-application"
+  auth_server_id = konnect_identity_auth_server.student_auth_server[each.key].id
+  grant_types    = ["client_credentials"]
+  response_types = ["token"]
+  redirect_uris  = ["https://httpbin.konghq.com", "https://app.insomnia.rest/oauth/redirect"]
+  client_secret  = "supersecret"
+  id             = "${var.student_name_prefix}${each.key}"
+}
+
+
+
 # ── AI Gateway Analytics Dashboard ─────────────────────────────────────────
 
 resource "konnect_dashboard" "ai_gateway_dashboard" {

@@ -20,6 +20,35 @@ output "demo_gateway_url" {
 #   }
 # }
 
+output "auth_server_ids" {
+  description = "Map of student IDs to their identity auth server IDs"
+  value = {
+    for student_id in local.student_ids : student_id => konnect_identity_auth_server.student_auth_server[student_id].id
+  }
+}
+
+output "auth_server_urls" {
+  description = "Map of student IDs to their identity auth server issuer URLs"
+  value = {
+    for student_id in local.student_ids : student_id => konnect_identity_auth_server.student_auth_server[student_id].issuer
+  }
+}
+
+output "application_client_ids" {
+  description = "Map of student IDs to their identity auth server client IDs"
+  value = {
+    for student_id in local.student_ids : student_id => konnect_identity_auth_server_client.student_application[student_id].id
+  }
+}
+
+output "application_client_secrets" {
+  description = "Map of student IDs to their identity auth server client secrets (sensitive)"
+  sensitive   = true
+  value = {
+    for student_id in local.student_ids : student_id => konnect_identity_auth_server_client.student_application[student_id].client_secret
+  }
+}
+
 output "system_account_info" {
   description = "Workshop system account details"
   value = {
