@@ -1,12 +1,18 @@
-title: "Kong Data Path — Lab 2: Auth & Tool Access Control"
+title: "Kong Data Path — Lab 2: MCP Tool Access & Policy"
 logo: static/images/kong-logo.png
 
 steps:
-  - 00-overview
-  - 01-the-problem
-  - 02-key-auth
-  - 03-consumers
-  - 04-acl-scoping
-  - 05-test-access
-  - 06-audit-logs
-  - 07-summary
+  - title: "Overview"
+    file: 00-overview
+  - title: "Approve Without Policy"
+    file: 01-approve-without-policy
+  - title: "Discover the Policy Server"
+    file: 02-discover-policy-server
+  - title: "Connect the Agent"
+    file: 03-connect-agent
+  - title: "Policy in Action"
+    file: 04-policy-in-action
+  - title: "Secure the MCP Server"
+    file: 05-secure-the-mcp
+  - title: "Summary"
+    file: 06-summary
