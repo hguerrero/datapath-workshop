@@ -110,14 +110,14 @@ Copy the full proxy **base URL** (everything before `/llm`) and save it
 in your terminal:
 
 ```terminal:execute
-command: |
+command: |-
   export LLM_PROXY_URL=https://PASTE_YOUR_URL_HERE
 ```
 
 Now run the test call from your terminal:
 
 ```terminal:execute
-command: |
+command: |-
   curl -s -X POST $LLM_PROXY_URL/llm/v1/chat/completions \
     -H "Content-Type: application/json" \
     -d '{

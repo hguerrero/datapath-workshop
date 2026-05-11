@@ -35,15 +35,75 @@ spec:
       terminal:
         enabled: true
       editor:
-        enabled: true
+        enabled: false
       console:
         enabled: false
     env:
       - name: PROXY
         value: "$(session_namespace)-proxy.$(ingress_domain)"
-      - name: LLM_PROXY
-        value: "https://$(session_namespace)-proxy.$(ingress_domain)/llm"
-      - name: AGENT_API_KEY
-        value: "$(agent_api_key)"
-      - name: KONNECT_TOKEN
-        value: "$(konnect_token)"
+    ingresses:
+      - name: expense-agent
+        port: 80
+        host: expense-agent-service
+        protocol: TCP
+    dashboards:
+      - name: Expense Agent
+        url: "$(ingress_protocol)://expense-agent-$(session_namespace).$(ingress_domain)/"      
+  environment:
+    objects:
+    # Agent deployment resources
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: expense-agent
+        labels:
+          app: expense-agent
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: expense-agent
+        template:
+          metadata:
+            labels:
+              app: expense-agent
+          spec:
+            containers:
+            - name: expense-agent
+              image: docker.io/hguerreroo/expense-agent:1.0.0
+              imagePullPolicy: Always
+              ports:
+              - name: http
+                containerPort: 3000
+              env:
+              - name: PORT
+                value: "3000"
+              - name: NODE_ENV
+                value: "production"
+              resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "50m"
+                limits:
+                  memory: "256Mi"
+                  cpu: "500m"
+              volumeMounts:
+              - name: tmp
+                mountPath: /tmp
+            volumes:
+            - name: tmp
+              emptyDir: {}
+    - apiVersion: v1
+      kind: Service
+      metadata:
+        name: expense-agent-service
+        labels:
+          app: expense-agent
+      spec:
+        type: ClusterIP
+        selector:
+          app: expense-agent
+        ports:
+        - name: http
+          port: 80
+          targetPort: http          
