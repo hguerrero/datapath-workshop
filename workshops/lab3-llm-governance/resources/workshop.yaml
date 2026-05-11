@@ -15,7 +15,7 @@ spec:
   - Kong Technical Product Marketing
   difficulty: intermediate
   url: https://github.com/hguerreroo/datapath-workshop
-  duration: 45m
+  duration: 90m
   publish:
     image: docker.io/hguerreroo/lab-llm-governance-files:latest
   workshop:

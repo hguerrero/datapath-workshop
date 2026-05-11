@@ -16,7 +16,7 @@ spec:
   - Kong Technical Product Marketing
   difficulty: beginner
   url: https://github.com/hguerreroo/datapath-workshop
-  duration: 45m
+  duration: 90m
   publish:
     image: docker.io/hguerreroo/lab-auth-tool-access-files:latest
   workshop:
