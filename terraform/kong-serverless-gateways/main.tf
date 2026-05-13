@@ -528,7 +528,7 @@ resource "konnect_gateway_config_store_secret" "llm_anthropic" {
   control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
   config_store_id  = konnect_gateway_config_store.student_config_store[each.key].id
   key              = "llm-api-key-anthropic"
-  value            = "Bearer ${var.llm_api_key_anthropic}"
+  value            = "${var.llm_api_key_anthropic}"
 }
 
 # ── expense-agent consumer + API key (pre-seeded for Lab 2+) ─────────────────
