@@ -148,7 +148,7 @@ Before running a session you need to provision one isolated Konnect environment 
 ```bash
 cd terraform/kong-serverless-gateways
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars — set konnect_personal_access_token, system_account_id, and student_count
+# Edit terraform.tfvars — set konnect_personal_access_token and student_count (system account created automatically)
 terraform init
 terraform plan
 terraform apply
