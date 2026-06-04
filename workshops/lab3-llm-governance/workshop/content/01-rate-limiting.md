@@ -51,7 +51,7 @@ both short bursts and sustained usage.
 
 | Field | Value |
 |-------|-------|
-| **Limit** | `100` |
+| **Limit** | `1000` |
 | **Tokens Count Strategy** | `total_tokens` |
 | **Window Size** | `60` |
 
@@ -59,7 +59,7 @@ both short bursts and sustained usage.
 
 | Field | Value |
 |-------|-------|
-| **Limit** | `1000` |
+| **Limit** | `10000` |
 | **Tokens Count Strategy** | `total_tokens` |
 | **Window Size** | `3600` |
 
