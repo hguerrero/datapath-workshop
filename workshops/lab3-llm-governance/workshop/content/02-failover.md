@@ -13,12 +13,12 @@ requests without any change to your agent.
 ### Navigate to the LLM Gateway
 
 In Konnect, click **AI Gateway** in the left navigation. You will see the
-**LLM Gateway** card — this is the AI Gateway created in Lab 1, currently
+**LLM Gateway - student-xx** card — this is the AI Gateway created in Lab 1, currently
 serving OpenAI traffic through your `student-XX-cp` control plane.
 
 ![AI Gateway showing the LLM Gateway card with OpenAI and live token metrics]({{< baseurl >}}/images/311-ai-gateway-llm-gateway.png)
 
-Click on the **LLM Gateway** card, then click **Load balancing** in the
+Click on the **LLM Gateway - student-xx** card, then click **Load balancing** in the
 left sub-navigation.
 
 The load balancing page shows your existing OpenAI/gpt-4o-mini provider with

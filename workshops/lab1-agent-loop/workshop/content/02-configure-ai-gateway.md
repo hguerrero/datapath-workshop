@@ -46,7 +46,7 @@ Fill in the form as follows, then scroll down to the **Route** section.
 
 | Field | Value |
 |-------|-------|
-| AI Gateway name | `LLM Gateway` |
+| AI Gateway name | `LLM Gateway - student-xx` where xx is your control plane number |
 | AI Gateway description | `A single point of entry for any LLM` |
 | Select gateway | choose your control plane (e.g. `student-01-cp`) |
 
