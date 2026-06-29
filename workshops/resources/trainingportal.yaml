@@ -4,44 +4,38 @@ metadata:
   name: portal
 spec:
   portal:
+    title: Kong Workshops
+    logo: "data:image/png;base64,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"
     ingress:
       hostname: portal
     password: agenticera
     registration:
       type: anonymous
     sessions:
-      maximum: 50
+      maximum: 250
     updates:
       workshop: true
     workshop:
       defaults:
-        reserved: 0
+        reserved: 10
+        expires: 90m
+        deadline: 120m
+        overtime: 10m
   workshops:
+  - alias: "mcp-lab1"
+    name: lab-mcp-conversion
+    initial: 40
+  - alias: "mcp-lab2"
+    name: lab-mcp-passthrough
+  - alias: "mcp-lab3"
+    expires: 30m
+    name: lab-mcp-registry
   - alias: "dp-lab1"
-    expires: 30m
-    initial: 0
     name: lab-data-path-agent-loop
-    orphaned: 5m
-    overdue: 2m
-    reserved: 0
+    initial: 40
   - alias: "dp-lab2"
-    expires: 30m
-    initial: 0
-    name: lab-auth-tool-access
-    orphaned: 5m
-    overdue: 2m
-    reserved: 0
+    name: lab-data-path-auth
   - alias: "dp-lab3"
-    expires: 30m
-    initial: 0
-    name: lab-llm-governance
-    orphaned: 5m
-    overdue: 2m
-    reserved: 0
+    name: lab-data-path-llm-governance
   - alias: "dp-lab4"
-    expires: 30m
-    initial: 0
-    name: lab-kafka-events
-    orphaned: 5m
-    overdue: 2m
-    reserved: 0
+    name: lab-data-path-kafka

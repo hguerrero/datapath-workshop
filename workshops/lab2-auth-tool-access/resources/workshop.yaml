@@ -28,6 +28,8 @@ spec:
       - /excercises/**
       - /README.md
   session:
+    resources:
+      memory: "128Mi"  
     namespaces:
       budget: small
       security:
