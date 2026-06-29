@@ -531,6 +531,46 @@ resource "konnect_gateway_config_store_secret" "llm_anthropic" {
   value            = "${var.llm_api_key_anthropic}"
 }
 
+# ── Semantic Cache Redis secrets (stored in each student's Config Store) ──────
+# Referenced in Kong configs as {vault://ai/redis-host}, {vault://ai/redis-port},
+# {vault://ai/redis-username}, {vault://ai/redis-password}.
+
+resource "konnect_gateway_config_store_secret" "redis_host" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  config_store_id  = konnect_gateway_config_store.student_config_store[each.key].id
+  key              = "redis-host"
+  value            = var.redis_host
+}
+
+resource "konnect_gateway_config_store_secret" "redis_port" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  config_store_id  = konnect_gateway_config_store.student_config_store[each.key].id
+  key              = "redis-port"
+  value            = tostring(var.redis_port)
+}
+
+resource "konnect_gateway_config_store_secret" "redis_username" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  config_store_id  = konnect_gateway_config_store.student_config_store[each.key].id
+  key              = "redis-username"
+  value            = var.redis_username
+}
+
+resource "konnect_gateway_config_store_secret" "redis_password" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  config_store_id  = konnect_gateway_config_store.student_config_store[each.key].id
+  key              = "redis-password"
+  value            = var.redis_password
+}
+
 # ── expense-agent consumer + API key (pre-seeded for Lab 2+) ─────────────────
 
 resource "konnect_gateway_consumer" "expense_agent" {

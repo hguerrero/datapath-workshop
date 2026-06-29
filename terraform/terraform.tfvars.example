@@ -24,6 +24,13 @@ control_plane_labels = {
 llm_api_key_openai    = "sk-..."
 llm_api_key_anthropic = "sk-ant-..."    # Leave empty ("") to skip Lab 3 failover provisioning
 
+# ── Semantic Cache Redis (stored in Konnect Vault — students never see these) ─
+
+redis_host     = "your-redis-host.example.com"
+redis_port     = 6379
+redis_username = "default"
+redis_password = "your-redis-password"
+
 # ── Kafka (Lab 4 only) ────────────────────────────────────────────────────────
 
 kafka_bootstrap_servers = ""   # e.g. "b-1.mycluster.kafka.us-east-1.amazonaws.com:9092"

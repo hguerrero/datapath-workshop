@@ -57,6 +57,34 @@ variable "llm_api_key_anthropic" {
   default     = ""
 }
 
+# ── Semantic Cache Redis credentials (stored in Konnect Vault) ────────────────
+
+variable "redis_host" {
+  description = "Hostname of the Redis instance used for semantic caching. Referenced in Kong configs as {vault://ai/redis-host}."
+  type        = string
+  default     = ""
+}
+
+variable "redis_port" {
+  description = "Port of the Redis instance used for semantic caching. Referenced in Kong configs as {vault://ai/redis-port}."
+  type        = number
+  default     = 6379
+}
+
+variable "redis_username" {
+  description = "Username for Redis authentication. Referenced in Kong configs as {vault://ai/redis-username}."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "redis_password" {
+  description = "Password for Redis authentication. Referenced in Kong configs as {vault://ai/redis-password}."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 # ── Optional: Kafka (Lab 4) ───────────────────────────────────────────────────
 
 variable "kafka_bootstrap_servers" {
