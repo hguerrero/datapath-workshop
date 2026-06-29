@@ -9,17 +9,49 @@ almost every run. Semantic caching lets Kong return a cached LLM response
 when an incoming prompt is semantically close to one it has already answered
 — cutting both latency and cost.
 
-### Add the AI Semantic Cache plugin
+### Navigate to Semantic Caching
 
-In Konnect, navigate to the `llm-proxy` route and go to **Plugins → Add
-Plugin → AI Semantic Cache**.
+In Konnect, open your **AI Gateway** and click **Semantic caching** in the
+left navigation. Click **+ Configure semantic caching**.
+
+![Semantic caching empty state — click Configure semantic caching]({{< baseurl >}}/images/410-ai-manager-semantic-caching.png)
+
+### Configure the vector database
+
+In the first section, set:
 
 | Field | Value |
 |-------|-------|
-| Embeddings provider | `openai` |
-| Embeddings model | `text-embedding-3-small` |
-| Similarity threshold | `0.95` |
-| Cache TTL | `300` (5 minutes) |
+| **Choose Vector Database Driver** | `redis` |
+| **VectorDB Dimensions** | `3072` |
+| **Caching Similarity Threshold** | `0.1` |
+| **Choose VectorDB Distance Metric** | `cosine` |
+
+Under **Configure Redis Vector**, set:
+
+| Field | Value |
+|-------|-------|
+| **Host** | `{vault://ai/redis-host}` |
+| **Port** | `{vault://ai/redis-port}` |
+| **Username** | `{vault://ai/redis-username}` |
+| **Password** | `{vault://ai/redis-password}` |
+
+![Configure Redis Vector — host, port, username, and password set via vault references]({{< baseurl >}}/images/411-semantic-caching-vectordb-config.png)
+
+> The Redis credentials are pulled from the Konnect Vault you configured at
+> the start of the workshop — students never handle the raw values.
+
+### Configure Embeddings
+
+In the **Embeddings** section, set:
+
+| Field | Value |
+|-------|-------|
+| **LLM Provider** | `OpenAI` |
+| **Model Name** | `text-embedding-3-large` |
+| **API key** | `{vault://ai/llm-api-key-openai}` |
+
+![Embeddings section — OpenAI provider, text-embedding-3-large model, API key from vault]({{< baseurl >}}/images/412-semantic-caching-embeddings-config.png)
 
 Click **Save**.
 
@@ -43,9 +75,10 @@ latency will be significantly lower than the first run.
 ### Why this matters
 
 LLM calls typically take 1–3 seconds. Cache hits return in under 100ms.
-For a workshop agent that processes many similar expense types, even a 0.95
-similarity threshold can serve a large fraction of requests from cache —
-reducing both spend and response time without any change to the agent.
+For a workshop agent that processes many similar expense types, even a 0.1
+similarity threshold with cosine distance can serve a large fraction of
+requests from cache — reducing both spend and response time without any
+change to the agent.
 
 ---
 

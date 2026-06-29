@@ -41,13 +41,16 @@ on the **AI Rate Limiting Advanced** plugin.
 
 ![Plugin catalog filtered to AI Rate Limiting Advanced — click Configure]({{< baseurl >}}/images/304-ai-rate-limiting.png)
 
-### Configure the Policies
+### Configure the Policy
 
 The plugin enforces limits through **Policies** — each policy is a token
-bucket with its own limit, strategy, and window. Add two policies to cover
-both short bursts and sustained usage.
+bucket with a **Tokens Count Strategy** and one or more window-based limits.
 
-**Policy 1 — per-minute burst limit**
+Click **+ New Item** under **Policies** to add a policy. With the policy added, set two window limits within it:
+
+**Limit 1 — per-minute burst**
+
+Click **+ New Item** under **Limits** and set:
 
 | Field | Value |
 |-------|-------|
@@ -55,7 +58,9 @@ both short bursts and sustained usage.
 | **Tokens Count Strategy** | `total_tokens` |
 | **Window Size** | `60` |
 
-**Policy 2 — per-hour sustained limit**
+**Limit 2 — per-hour sustained**
+
+Click **+ New Item** under **Limits** again and set:
 
 | Field | Value |
 |-------|-------|
@@ -63,9 +68,7 @@ both short bursts and sustained usage.
 | **Tokens Count Strategy** | `total_tokens` |
 | **Window Size** | `3600` |
 
-Click **+ New Item** under Policies to add the second policy.
-
-![Policies section showing the two token limits — 100/60s and 1000/3600s]({{< baseurl >}}/images/305-ai-rate-limiting-policies-details1.png)
+![Policies section showing the two window limits — 1000/60s and 10000/3600s]({{< baseurl >}}/images/305-ai-rate-limiting-policies-details1.png)
 
 > **total_tokens** counts both prompt and completion tokens together. This is
 > the most conservative strategy and gives you the tightest cost control —
@@ -83,15 +86,22 @@ Enable **Partition By** and set:
 |-------|-------|
 | **Partition By → Type** | `provider` |
 | **Partition By → Values** | `openai` |
+
+![Match section — Partition By provider: openai]({{< baseurl >}}/images/305-ai-rate-limiting-policies-details2.png)
+
+### Configure the Window Type
+
+Back in the top-level plugin config, set:
+
+| Field | Value |
+|-------|-------|
 | **Window Type** | `sliding` |
-
-![Match section — Partition By provider: openai, Window Type: sliding]({{< baseurl >}}/images/305-ai-rate-limiting-policies-details2.png)
-
-Click **Save**.
 
 > **Sliding window** means the 60-second or 3600-second window rolls with time
 > rather than resetting on a fixed clock boundary — preventing burst abuse at
 > window edges.
+
+Click **Save**.
 
 ### Test the limit
 
