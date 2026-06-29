@@ -87,27 +87,12 @@ kong-data-path-workshop/
 │           ├── content/                # Markdown pages (00–05)
 │           └── static/images/
 │
-├── decK/
-│   ├── lab1-agent-loop/
-│   │   └── kong.yaml                   # MCP proxy + AI route — base state
-│   ├── lab2-auth-tool-access/
-│   │   └── kong.yaml                   # Adds key-auth + ACL plugins
-│   ├── lab3-llm-governance/
-│   │   └── kong.yaml                   # Adds AI Gateway, rate-limiting, guardrails
-│   └── lab4-kafka-events/
-│       └── kong.yaml                   # Adds Kafka Upstream plugin on decision route
-│
-├── terraform/
-│   ├── gke-educates/                   # Provision GKE cluster for Educates
-│   │   ├── main.tf
-│   │   └── terraform.tfvars.example
-│   │
-│   └── kong-serverless-gateways/       # Provision per-student Konnect environments
-│       ├── main.tf
-│       ├── variables.tf
-│       ├── outputs.tf
-│       ├── provider.tf
-│       └── terraform.tfvars.example
+├── terraform/                          # Provision per-student Konnect environments
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── provider.tf
+│   └── terraform.tfvars.example
 │
 └── docker-compose.yml                  # Local dev: agent (optional) + Kafka (Lab 4)
 ```
@@ -116,11 +101,13 @@ kong-data-path-workshop/
 
 ## How the Mock APIs Work
 
-The three back-end services are **not running processes**. Kong's **Mocking plugin** reads the `example` fields directly from each OpenAPI spec in `mock-apis/` and returns them as HTTP responses — no upstream is ever contacted. The AI MCP Proxy Plugin (`conversion-listener` mode) then translates those REST responses into MCP tool results for the agent.
+The three back-end services are **not running processes**. Kong's **Mocking plugin** serves responses directly from OpenAPI specs embedded inline in `terraform/main.tf` — no upstream is ever contacted. The AI MCP Proxy Plugin (`conversion-listener` mode) then translates those responses into MCP tool results for the agent.
+
+Standalone copies of the three specs live in `mock-apis/` for reference.
 
 This means:
 
-- **Lab 1–3**: No services need to be started. Kong handles all mock responses.
+- **Labs 1–3**: No services need to be started. Kong handles all mock responses.
 - **Lab 4**: Only Kafka needs a running process (see below).
 
 ---
@@ -132,23 +119,22 @@ This means:
 Everything needed to run each lab is pre-provisioned by Terraform and injected into the Educates session. Students only need:
 
 - A browser (to access the Educates workshop portal and Expense Agent UI)
-- An **OpenAI API key** (`sk-…`) — the one thing not pre-provisioned
 
 ### For Instructors
 
-Before running a session you need to provision one isolated Konnect environment per student. The [`terraform/kong-serverless-gateways/`](terraform/kong-serverless-gateways/) module handles this. Each student environment includes:
+Before running a session you need to provision one isolated Konnect environment per student. The [`terraform/`](terraform/) module handles this. Each student environment includes:
 
 - A Konnect Serverless Gateway with MCP routes and the Expense Agent pre-deployed
 - An AI Gateway route for LLM proxying (Labs 3+)
-- A Konnect Config Store (prefix `agent`) for upstream secret injection
+- A Konnect Config Store and Vault (prefix `ai`) with LLM API keys and Redis credentials pre-seeded as secrets
 - A pre-seeded consumer (`expense-agent`) for Labs 2+
 
 **Quick start:**
 
 ```bash
-cd terraform/kong-serverless-gateways
+cd terraform
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars — set konnect_personal_access_token and student_count (system account created automatically)
+# Edit terraform.tfvars — set konnect_personal_access_token, llm_api_key_openai, and student_count
 terraform init
 terraform plan
 terraform apply
@@ -157,13 +143,14 @@ terraform apply
 After `apply`, extract and distribute per-student values:
 
 ```bash
-terraform output serverless_gateway_urls    # → $PROXY per student
-terraform output llm_route_urls             # → $LLM_PROXY per student
-terraform output agent_api_keys             # → $AGENT_API_KEY per student (Lab 2+)
-terraform output kafka_bootstrap_servers    # → $KAFKA_BOOTSTRAP (Lab 4 only)
+terraform output serverless_gateway_urls       # → $PROXY per student
+terraform output auth_server_urls              # → $KONG_IDENTITY_ISSUER per student (Lab 2+)
+terraform output application_client_ids        # → $KONG_MCP_CLIENT_ID per student (Lab 2+)
+terraform output -json system_account_access_token  # → $KONNECT_TOKEN for decK syncs
+terraform output kafka_bootstrap_servers       # → $KAFKA_BOOTSTRAP (Lab 4 only)
 ```
 
-The Educates cluster is provisioned separately by [`terraform/gke-educates/`](terraform/gke-educates/). See its README for setup instructions.
+The Educates cluster that serves the lab instructions is provisioned separately (GKE + Educates operator). Refer to your internal cluster setup documentation.
 
 ---
 
@@ -284,25 +271,6 @@ Update the `host` field in `agent/k8s/ingress.yaml` to match your cluster's doma
 
 ---
 
-## decK Configs
-
-Each lab directory under `decK/` contains a `kong.yaml` representing the full Kong state for that lab. They are cumulative — Lab 2's config is a superset of Lab 1's, and so on. Sync a config with:
-
-```bash
-deck gateway sync decK/lab1-agent-loop/kong.yaml \
-  --konnect-token $KONNECT_TOKEN \
-  --konnect-control-plane-name $CP_NAME
-```
-
-Before syncing, the following placeholders must be replaced (or use `--env-var`):
-
-| Placeholder | Description |
-|-------------|-------------|
-| `$PROXY_HOST` | Public hostname of the student's Kong Gateway proxy |
-| `$LLM_UPSTREAM` | LLM provider base URL (e.g. `api.openai.com`) |
-| `$KAFKA_BOOTSTRAP` | Kafka broker address (Lab 4 only) |
-
----
 
 ## Environment Variables Reference
 
@@ -313,7 +281,7 @@ Variables surfaced in the Educates session (set by the instructor at deploy time
 | `PROXY` | All labs | Public URL of the student's Kong Gateway proxy |
 | `AGENT_URL` | All labs | URL of the Expense Agent UI tab |
 | `LLM_PROXY` | Lab 3 | Kong AI Gateway route URL for LLM calls |
-| `AGENT_API_KEY` | Lab 2, 3, 4 | API key for the `expense-agent` consumer |
+| `AGENT_API_KEY` | Lab 2, 3, 4 | API key for the `expense-agent` consumer (generated post-apply) |
 | `KONNECT_TOKEN` | Lab 2, 3 | Konnect PAT for Config Store access |
 | `KAFKA_BOOTSTRAP` | Lab 4 | Kafka broker bootstrap server address |
 
