@@ -531,6 +531,71 @@ resource "konnect_gateway_config_store_secret" "llm_anthropic" {
   value            = "${var.llm_api_key_anthropic}"
 }
 
+# ── Redis Config Store + Vault per student ───────────────────────────────────
+# Each student CP gets its own "redis" vault (backed by a dedicated config
+# store) holding the shared Redis connection details. The same user / password
+# / host / port from terraform.tfvars are written into every student's vault.
+# Referenced in decK / plugin configs as:
+#   {vault://redis/username}
+#   {vault://redis/password}
+#   {vault://redis/host}
+#   {vault://redis/port}
+
+resource "konnect_gateway_config_store" "student_redis_config_store" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  name             = "${var.student_name_prefix}${each.key}-redis-config-store"
+}
+
+resource "konnect_gateway_vault" "student_redis_vault" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  name             = "konnect"
+  prefix           = "redis"
+  description      = "Redis credentials vault for ${var.student_name_prefix}${each.key}"
+  config = jsonencode({
+    config_store_id = konnect_gateway_config_store.student_redis_config_store[each.key].id
+  })
+}
+
+resource "konnect_gateway_config_store_secret" "redis_username" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  config_store_id  = konnect_gateway_config_store.student_redis_config_store[each.key].id
+  key              = "username"
+  value            = var.redis_username
+}
+
+resource "konnect_gateway_config_store_secret" "redis_password" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  config_store_id  = konnect_gateway_config_store.student_redis_config_store[each.key].id
+  key              = "password"
+  value            = var.redis_password
+}
+
+resource "konnect_gateway_config_store_secret" "redis_host" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  config_store_id  = konnect_gateway_config_store.student_redis_config_store[each.key].id
+  key              = "host"
+  value            = var.redis_host
+}
+
+resource "konnect_gateway_config_store_secret" "redis_port" {
+  for_each = toset(local.student_ids)
+
+  control_plane_id = konnect_gateway_control_plane.serverless_cp[each.key].id
+  config_store_id  = konnect_gateway_config_store.student_redis_config_store[each.key].id
+  key              = "port"
+  value            = var.redis_port
+}
+
 # ── expense-agent consumer + API key (pre-seeded for Lab 2+) ─────────────────
 
 resource "konnect_gateway_consumer" "expense_agent" {
@@ -675,6 +740,9 @@ EOT
 # ── Reference Existing Demo Control Plane for Lab 1 Agent Loop ──────────────
 
 data "konnect_gateway_control_plane" "demo_cp" {
+  filter = {
+    name = { eq = var.demo_control_plane_name }
+  }
 }
 
 # ── Lab 1: Policy API Service ────────────────────────────────────────────────

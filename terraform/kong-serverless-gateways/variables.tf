@@ -34,6 +34,12 @@ variable "control_plane_description" {
   default     = "Kong Data Path Workshop — environment for"
 }
 
+variable "demo_control_plane_name" {
+  description = "Name of the existing serverless control plane that backs the labs (mock HR/policy/expense APIs). Must be a CLUSTER_TYPE_SERVERLESS_V1 control plane."
+  type        = string
+  default     = "default"
+}
+
 variable "control_plane_labels" {
   description = "Labels to attach to every student control plane (useful for filtering in the Konnect UI)"
   type        = map(string)
@@ -55,6 +61,36 @@ variable "llm_api_key_anthropic" {
   type        = string
   sensitive   = true
   default     = ""
+}
+
+# ── Redis credentials (stored in Konnect Vault — students never see these) ────
+# Provisioned into a per-student "redis" vault and referenced in Kong configs
+# as {vault://redis/username}, {vault://redis/password}, {vault://redis/host},
+# {vault://redis/port}.
+
+variable "redis_username" {
+  description = "Redis username. Stored in each student's redis vault, referenced as {vault://redis/username}."
+  type        = string
+  default     = ""
+}
+
+variable "redis_password" {
+  description = "Redis password. Stored in each student's redis vault, referenced as {vault://redis/password}."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "redis_host" {
+  description = "Redis host. Stored in each student's redis vault, referenced as {vault://redis/host}."
+  type        = string
+  default     = ""
+}
+
+variable "redis_port" {
+  description = "Redis port. Stored in each student's redis vault, referenced as {vault://redis/port}."
+  type        = string
+  default     = "6379"
 }
 
 # ── Optional: Kafka (Lab 4) ───────────────────────────────────────────────────

@@ -5,11 +5,11 @@
 
 # ── Konnect account ───────────────────────────────────────────────────────────
 # (also set in provider.tf / environment; these drive the workshop resources)
-# konnect_personal_access_token = "<USE_ENV_VARS>"
+konnect_personal_access_token = ""
 
 # ── Student cohort ────────────────────────────────────────────────────────────
 
-student_count        = 20
+student_count        = 70
 student_start_number = 1       # Change to 21 to add a second batch without re-provisioning the first
 student_name_prefix  = "student-"
 
@@ -33,7 +33,17 @@ kafka_bootstrap_servers = ""   # e.g. "b-1.mycluster.kafka.us-east-1.amazonaws.c
 # Set enable_sso_config = false if you already have an identity provider configured
 
 enable_sso_config                = true              # Set to false if identity provider already exists
-workshop_sso_oidc_org_login_path = "<REPLACE_ME>"   # MANDATORY: OIDC login path for your workshop
+workshop_sso_oidc_org_login_path = "ams-mcp-workshop"   # MANDATORY: OIDC login path for your workshop
 # workshop_sso_oidc_issuer       = "https://workshop-idp.com"    # Optional: defaults to workshop-idp.com
 # workshop_sso_oidc_client_id    = "workshop-client-12345"       # Optional: defaults to workshop-client-12345  
 # workshop_sso_oidc_client_secret = "L2bQ8nZ5yX1wJ"               # Optional: defaults to L2bQ8nZ5yX1wJ
+
+# ── Redis Values for Student Vaults ────────────────────────────────────────────────────
+# These are written into a per-student "redis" Konnect vault on every student
+# control plane. Reference them in Kong configs as:
+#   {vault://redis/username}  {vault://redis/password}
+#   {vault://redis/host}      {vault://redis/port}
+redis_username = ""
+redis_password = ""
+redis_host     = ""
+redis_port     = "11111"
